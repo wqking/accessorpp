@@ -46,7 +46,7 @@ public:
 	template <typename F, typename C>
 	explicit Setter(const F & func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
-		: setterFunc(std::bind(func, instance, std::placeholders::_1))
+		: setterFunc([func, instance](const ValueType & value) { (instance->*func)(value); })
 	{
 	}
 
