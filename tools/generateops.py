@@ -19,7 +19,7 @@ binaryOperatorList = [
 binaryOperatorTemplate = '''
 template <typename T, typename U>
 auto operator {op} (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) {op} (typename AccessorValueType<U>::Type)(b);

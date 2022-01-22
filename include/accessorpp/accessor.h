@@ -30,23 +30,23 @@ public:
 	}
 
 private:
-	template <typename AccessorType, typename V, typename C>
+	template <typename AccessorType, typename P2, typename C>
 	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
 		-> typename std::enable_if<CanInvoke<C>::value, void>::type
 	{
 		callback();
 	}
 
-	template <typename AccessorType, typename V, typename C>
+	template <typename AccessorType, typename P2, typename C>
 	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, V>::value, void>::type
+		-> typename std::enable_if<CanInvoke<C, P2>::value, void>::type
 	{
 		callback(newValue);
 	}
 
-	template <typename AccessorType, typename V, typename C>
+	template <typename AccessorType, typename P2, typename C>
 	auto doOnSet(const AccessorType & accessor, const typename AccessorType::ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, V, V>::value, void>::type
+		-> typename std::enable_if<CanInvoke<C, P2, P2>::value, void>::type
 	{
 		callback(newValue, accessor.get());
 	}
@@ -77,28 +77,44 @@ struct AccessorStorage <Type, true>
 	using StorageValueType = typename std::remove_cv<typename std::remove_reference<Type>::type>::type;
 
 	AccessorStorage()
-		: storedValue(),
+		:
+			storedValue(),
 			getter(&AccessorStorage::storedValue, this),
 			setter(&AccessorStorage::storedValue, this)
 	{
 	}
 
 	AccessorStorage(const AccessorStorage & other)
-		: storedValue(other.storedValue),
-			getter(other.getter),
-			setter(other.setter)
+		:
+			storedValue(other.storedValue),
+			getter(&AccessorStorage::storedValue, this),
+			setter(&AccessorStorage::storedValue, this)
 	{
 	}
 
-	template <typename U>
-	explicit AccessorStorage(U && v)
-		: getter(std::forward<U>(v)), setter(std::forward<U>(v))
+	template <typename P1>
+	explicit AccessorStorage(P1 && p1)
+		: getter(std::forward<P1>(p1)), setter(std::forward<P1>(p1))
 	{
 	}
 
-	template <typename G, typename S>
-	AccessorStorage(G && getter, S && setter)
-		: getter(std::forward<G>(getter)), setter(std::forward<S>(setter))
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2,
+		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr)
+		: getter(std::forward<P1>(p1)), setter(std::forward<P2>(p2))
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2,
+		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr)
+		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P1>(p1), std::forward<P2>(p2))
+	{
+	}
+
+	template <typename P1, typename P2, typename P3, typename P4>
+	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
+		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P3>(p3), std::forward<P4>(p4))
 	{
 	}
 
@@ -123,15 +139,29 @@ struct AccessorStorage <Type, false>
 	{
 	}
 
-	template <typename U>
-	explicit AccessorStorage(U && v)
-		: getter(std::forward<U>(v)), setter(std::forward<U>(v))
+	template <typename P1>
+	explicit AccessorStorage(P1 && p1)
+		: getter(std::forward<P1>(p1)), setter(std::forward<P1>(p1))
 	{
 	}
 
-	template <typename G, typename S>
-	AccessorStorage(G && getter, S && setter)
-		: getter(std::forward<G>(getter)), setter(std::forward<S>(setter))
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2,
+		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr)
+		: getter(std::forward<P1>(p1)), setter(std::forward<P2>(p2))
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2,
+		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr)
+		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P1>(p1), std::forward<P2>(p2))
+	{
+	}
+
+	template <typename P1, typename P2, typename P3, typename P4>
+	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
+		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P3>(p3), std::forward<P4>(p4))
 	{
 	}
 
@@ -142,13 +172,13 @@ struct AccessorStorage <Type, false>
 
 } // namespace internal_
 
-struct StoreValue
+struct UseStorage
 {
 	template <typename Type>
 	using StorageType = internal_::AccessorStorage<Type, true>;
 };
 
-struct NoStoreValue
+struct NoStorage
 {
 	template <typename Type>
 	using StorageType = internal_::AccessorStorage<Type, false>;
@@ -156,13 +186,15 @@ struct NoStoreValue
 
 template <
 	typename Type,
-	typename Storage = StoreValue,
+	typename Storage = UseStorage,
 	typename OnSetCallbackType = void
 >
 class Accessor : private Storage::template StorageType<Type>, public internal_::OnSetCallback<OnSetCallbackType>
 {
 public:
 	using ValueType = Type;
+
+	static constexpr bool useStorage = std::is_same<Storage, UseStorage>::value;
 
 private:
 	using StorageType = typename Storage::template StorageType<Type>;
@@ -174,20 +206,26 @@ public:
 	}
 
 	// The explict static_cast is required, otherwise it will call
-	// template <typename U> explicit AccessorStorage(U && v)
+	// template <typename P1> explicit AccessorStorage(P1 && p2)
 	Accessor(const Accessor & other)
 		: StorageType(static_cast<const StorageType &>(other)) {
 	}
 
-	template <typename U>
-	explicit Accessor(U && v)
-		: StorageType(std::forward<U>(v))
+	template <typename P1>
+	explicit Accessor(P1 && p1)
+		: StorageType(std::forward<P1>(p1))
 	{
 	}
 
-	template <typename G, typename S>
-	Accessor(G && getter, S && setter)
-		: StorageType(std::forward<G>(getter), std::forward<S>(setter))
+	template <typename P1, typename P2>
+	Accessor(P1 && p1, P2 && p2)
+		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2))
+	{
+	}
+
+	template <typename P1, typename P2, typename P3, typename P4>
+	Accessor(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
+		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4))
 	{
 	}
 
@@ -275,9 +313,10 @@ auto operator ++ (T & a)
 
 template <typename T>
 auto operator ++ (T & a, int)
-	-> typename std::enable_if<IsAccessor<T>::value, T &>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
-	T result(a);
+	T result;
+	result = a;
 	++a;
 	return result;
 }
@@ -292,36 +331,40 @@ auto operator -- (T & a)
 
 template <typename T>
 auto operator -- (T & a, int)
-	-> typename std::enable_if<IsAccessor<T>::value, T &>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
-	T result(a);
+	T result;
+	result = a;
 	--a;
 	return result;
 }
 
 template <typename T>
 auto operator ! (const T & a)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
-	T result(a);
+	T result;
+	result = a;
 	result = ! a.get();
 	return result;
 }
 
 template <typename T>
 auto operator + (T & a)
-	-> typename std::enable_if<IsAccessor<T>::value, T &>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
-	T result(a);
+	T result;
+	result = a;
 	result = +(typename AccessorValueType<T>::Type)(a);
 	return result;
 }
 
 template <typename T>
 auto operator - (T & a)
-	-> typename std::enable_if<IsAccessor<T>::value, T &>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
-	T result(a);
+	T result;
+	result = a;
 	result = -(typename AccessorValueType<T>::Type)(a);
 	return result;
 }
@@ -395,7 +438,7 @@ auto operator || (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator + (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) + (typename AccessorValueType<U>::Type)(b);
@@ -404,7 +447,7 @@ auto operator + (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator - (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) - (typename AccessorValueType<U>::Type)(b);
@@ -413,7 +456,7 @@ auto operator - (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator * (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) * (typename AccessorValueType<U>::Type)(b);
@@ -422,7 +465,7 @@ auto operator * (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator / (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) / (typename AccessorValueType<U>::Type)(b);
@@ -431,7 +474,7 @@ auto operator / (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator % (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) % (typename AccessorValueType<U>::Type)(b);
@@ -440,7 +483,7 @@ auto operator % (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator & (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) & (typename AccessorValueType<U>::Type)(b);
@@ -449,7 +492,7 @@ auto operator & (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator | (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) | (typename AccessorValueType<U>::Type)(b);
@@ -458,7 +501,7 @@ auto operator | (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator ^ (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) ^ (typename AccessorValueType<U>::Type)(b);
@@ -467,7 +510,7 @@ auto operator ^ (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator << (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) << (typename AccessorValueType<U>::Type)(b);
@@ -476,7 +519,7 @@ auto operator << (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator >> (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) >> (typename AccessorValueType<U>::Type)(b);
@@ -563,7 +606,6 @@ auto operator >>= (T & a, const U & b)
 	a = (typename AccessorValueType<T>::Type)(a) >> (typename AccessorValueType<U>::Type)(b);
 	return a;
 }
-
 
 
 } // namespace accessorpp

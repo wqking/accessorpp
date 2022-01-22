@@ -38,7 +38,7 @@ public:
 
 	template <typename U>
 	explicit Getter(U && value,
-		typename std::enable_if<std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
+		typename std::enable_if<! std::is_member_object_pointer<U>::value && std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
 		: getterFunc([value]()->ValueType { return (ValueType)value; })
 	{
 	}
@@ -87,6 +87,16 @@ public:
 
 private:
 	std::function<ValueType ()> getterFunc;
+};
+
+template <typename T>
+struct IsGetter : std::false_type
+{
+};
+
+template <typename Type>
+struct IsGetter <Getter<Type> > : std::true_type
+{
 };
 
 template <typename Type>

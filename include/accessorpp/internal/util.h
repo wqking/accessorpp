@@ -25,6 +25,8 @@ struct GetRawType
 	using Type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };
 
+// This is used in SFINAE to avoid ambiguous overload
+struct Dummy {};
 
 } // namespace internal_
 

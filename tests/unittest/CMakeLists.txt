@@ -6,7 +6,7 @@ set(SRC_TEST
 	test_setter.cpp
 	test_accessor_basic.cpp
 	test_accessor_operator_binary.cpp
-	test_accessor_operator_binary_assign.cpp
+	test_accessor_operator_binary_assignment.cpp
 	test_accessor_operator_logic.cpp
 	test_accessor_operator_unary.cpp
 )

@@ -83,6 +83,16 @@ private:
 	std::function<void (const ValueType &)> setterFunc;
 };
 
+template <typename T>
+struct IsSetter : std::false_type
+{
+};
+
+template <typename Type>
+struct IsSetter <Setter<Type> > : std::true_type
+{
+};
+
 template <typename Type>
 std::istream & operator >> (std::istream & stream, Setter<Type> & setter)
 {
