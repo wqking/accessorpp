@@ -196,10 +196,15 @@ TEST_CASE("Accessor, int, default storage, variable, customized getter/setter")
 	REQUIRE(setCount == 2);
 }
 
+struct NoStoragePolicies
+{
+	static constexpr bool holdValue = false;
+};
+
 TEST_CASE("Accessor, int, NoStorage, variable")
 {
 	int value{};
-	accessorpp::Accessor<int, accessorpp::NoStorage> accessor(&value);
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value);
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;
@@ -212,7 +217,7 @@ TEST_CASE("Accessor, int, NoStorage, variable")
 TEST_CASE("Accessor, int, NoStorage, member")
 {
 	MyValue myValue;
-	accessorpp::Accessor<int, accessorpp::NoStorage> accessor(&MyValue::value, &myValue);
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue);
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;
@@ -225,7 +230,7 @@ TEST_CASE("Accessor, int, NoStorage, member")
 TEST_CASE("Accessor, int, NoStorage, member getValue() setValue()")
 {
 	MyValue myValue;
-	accessorpp::Accessor<int, accessorpp::NoStorage> accessor(&MyValue::getValue, &myValue, &MyValue::setValue, &myValue);
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::getValue, &myValue, &MyValue::setValue, &myValue);
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;
@@ -237,11 +242,14 @@ TEST_CASE("Accessor, int, NoStorage, member getValue() setValue()")
 
 TEST_CASE("Accessor, callback")
 {
+	struct Policies {
+		using OnChangingCallback = std::function<void (int, int)>;
+		using OnChangedCallback = std::function<void (int)>;
+	};
+
 	using AccessorType = accessorpp::Accessor<
 		const int &,
-		accessorpp::UseStorage,
-		std::function<void (int, int)>,
-		std::function<void (int)>
+		Policies
 	>;
 	struct ValuePair
 	{

@@ -14,7 +14,7 @@
 #ifndef SETTER_H_578722158669
 #define SETTER_H_578722158669
 
-#include "internal/util.h"
+#include "internal/typeutil_i.h"
 
 #include <functional>
 #include <type_traits>
