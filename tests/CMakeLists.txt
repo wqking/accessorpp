@@ -16,4 +16,4 @@ endif()
 
 enable_testing()
 add_subdirectory(unittest)
-
+add_subdirectory(benchmark)
