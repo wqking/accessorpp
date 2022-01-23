@@ -37,10 +37,12 @@ class Accessor :
 			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
 		>,
 	public internal_::OnChangingCallback<
-			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type
+			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
+			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>,
 	public internal_::OnChangedCallback<
-			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type
+			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
+			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>
 {
 private:
@@ -48,10 +50,12 @@ private:
 			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
 		>;
 	using OnChangingCallbackType = internal_::OnChangingCallback<
-			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type
+			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
+			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>;
 	using OnChangedCallbackType = internal_::OnChangedCallback<
-			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type
+			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
+			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>;
 
 public:
@@ -85,9 +89,17 @@ public:
 	}
 
 	Accessor & set(const ValueType & value) {
-		this->OnChangingCallbackType::invokeCallback(*this, value);
+		this->OnChangingCallbackType::invokeCallback(value);
 		this->setter.set(value);
-		this->OnChangedCallbackType::invokeCallback(*this, value);
+		this->OnChangedCallbackType::invokeCallback(value);
+		return *this;
+	}
+
+	template <typename CD>
+	Accessor & set(const ValueType & value, CD && callbackData) {
+		this->OnChangingCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
+		this->setter.set(value);
+		this->OnChangedCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
 		return *this;
 	}
 

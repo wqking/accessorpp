@@ -61,6 +61,17 @@ template <typename T, bool> struct SelectOnChangedCallback { using Type = typena
 template <typename T> struct SelectOnChangedCallback <T, false> { using Type = void; };
 
 template <typename T>
+struct HasTypeCallbackData
+{
+	template <typename C> static std::true_type test(typename C::CallbackData *) ;
+	template <typename C> static std::false_type test(...);    
+
+	enum { value = !! decltype(test<T>(0))() };
+};
+template <typename T, bool> struct SelectCallbackData { using Type = typename T::CallbackData; };
+template <typename T> struct SelectCallbackData <T, false> { using Type = void; };
+
+template <typename T>
 struct HasFieldHoldValue
 {
 	template <typename C> static std::true_type test(decltype(C::holdValue) *) ;

@@ -283,3 +283,53 @@ TEST_CASE("Accessor, callback")
 	REQUIRE(changedValue.newValue == 8);
 	REQUIRE(changedValue.oldValue == 0);
 }
+
+TEST_CASE("Accessor, callback, CallbackData")
+{
+	struct Policies {
+		using OnChangingCallback = std::function<void (int, std::string)>;
+		using OnChangedCallback = std::function<void ()>;
+		using CallbackData = std::string;
+	};
+
+	using AccessorType = accessorpp::Accessor<
+		const int &,
+		Policies
+	>;
+
+	struct ValuePair
+	{
+		int newValue;
+		int oldValue;
+		std::string context;
+	};
+	ValuePair changingValue {};
+	ValuePair changedValue {};
+	AccessorType accessor;
+	accessor.onChanging() = [&changingValue, &accessor](const int newValue, const std::string & context) {
+		changingValue.newValue = newValue;
+		changingValue.oldValue = accessor;
+		changingValue.context = context;
+	};
+	accessor.onChanged() = [&changedValue, &accessor]() {
+		changedValue.newValue = accessor;
+	};
+	REQUIRE(changingValue.newValue == 0);
+	REQUIRE(changingValue.oldValue == 0);
+	REQUIRE(changedValue.newValue == 0);
+	REQUIRE(changedValue.oldValue == 0);
+
+	accessor = 3;
+	REQUIRE(changingValue.newValue == 3);
+	REQUIRE(changingValue.oldValue == 0);
+	REQUIRE(changingValue.context == "");
+	REQUIRE(changedValue.newValue == 3);
+	REQUIRE(changedValue.oldValue == 0);
+
+	accessor.set(8, "Hello");
+	REQUIRE(changingValue.newValue == 8);
+	REQUIRE(changingValue.oldValue == 3);
+	REQUIRE(changingValue.context == "Hello");
+	REQUIRE(changedValue.newValue == 8);
+	REQUIRE(changedValue.oldValue == 0);
+}

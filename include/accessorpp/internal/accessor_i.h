@@ -20,14 +20,8 @@ namespace accessorpp {
 namespace internal_ {
 
 template <typename CallbackType>
-class OnSetCallback
+struct ChangeCallbackBase
 {
-protected:
-	template <typename AccessorType>
-	void invokeCallback(const AccessorType & accessor, const typename AccessorType::ValueType & newValue) {
-		doInvokeCallback<AccessorType, typename AccessorType::ValueType, CallbackType>(accessor, newValue);
-	}
-
 	CallbackType & getCallback() {
 		return callback;
 	}
@@ -36,48 +30,106 @@ protected:
 		return callback;
 	}
 
-private:
-	template <typename AccessorType, typename ValueType, typename C>
-	auto doInvokeCallback(const AccessorType & /*accessor*/, const ValueType & /*newValue*/)
-		-> typename std::enable_if<CanInvoke<C>::value, void>::type
-	{
-		callback();
-	}
-
-	template <typename AccessorType, typename ValueType, typename C>
-	auto doInvokeCallback(const AccessorType & /*accessor*/, const ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, ValueType>::value, void>::type
-	{
-		callback(newValue);
-	}
-
-	template <typename AccessorType, typename ValueType, typename C>
-	auto doInvokeCallback(const AccessorType & accessor, const ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, ValueType, ValueType>::value, void>::type
-	{
-		callback(newValue, accessor.get());
-	}
-
-private:
 	CallbackType callback;
 };
 
-template <>
-class OnSetCallback <void>
+template <typename CallbackType, typename CallbackDataType>
+class ChangeCallback : protected ChangeCallbackBase <CallbackType>
 {
 protected:
-	template <typename AccessorType>
-	void invokeCallback(AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
+	template <typename ValueType>
+	void invokeCallback(
+			const ValueType & newValue
+		) {
+		doInvokeCallback<ValueType, CallbackType>(newValue, CallbackDataType());
+	}
+
+	template <typename ValueType>
+	void invokeCallback(
+			const ValueType & newValue,
+			const CallbackDataType & data
+		) {
+		doInvokeCallback<ValueType, CallbackType>(newValue, data);
+	}
+
+private:
+	template <typename ValueType, typename C>
+	auto doInvokeCallback(
+			const ValueType & /*newValue*/,
+			const CallbackDataType & /*data*/
+		)
+		-> typename std::enable_if<CanInvoke<C>::value, void>::type
+	{
+		this->callback();
+	}
+
+	template <typename ValueType, typename C>
+	auto doInvokeCallback(
+			const ValueType & newValue,
+			const CallbackDataType & /*data*/
+		)
+		-> typename std::enable_if<CanInvoke<C, const ValueType &>::value, void>::type
+	{
+		this->callback(newValue);
+	}
+
+	template <typename ValueType, typename C>
+	auto doInvokeCallback(
+			const ValueType & newValue,
+			const CallbackDataType & data
+		)
+		-> typename std::enable_if<CanInvoke<C, const ValueType &, const CallbackDataType &>::value, void>::type
+	{
+		this->callback(newValue, data);
+	}
+};
+
+template <typename CallbackType>
+class ChangeCallback <CallbackType, void> : protected ChangeCallbackBase <CallbackType>
+{
+protected:
+	template <typename ValueType>
+	void invokeCallback(
+			const ValueType & newValue
+		) {
+		doInvokeCallback<ValueType, CallbackType>(newValue);
+	}
+
+private:
+	template <typename ValueType, typename C>
+	auto doInvokeCallback(
+			const ValueType & /*newValue*/
+		)
+		-> typename std::enable_if<CanInvoke<C>::value, void>::type
+	{
+		this->callback();
+	}
+
+	template <typename ValueType, typename C>
+	auto doInvokeCallback(
+			const ValueType & newValue
+		)
+		-> typename std::enable_if<CanInvoke<C, const ValueType &>::value, void>::type
+	{
+		this->callback(newValue);
+	}
+};
+
+class DummyChangeCallback
+{
+protected:
+	template <typename ValueType>
+	void invokeCallback(const ValueType & /*newValue*/)
 	{
 	}
 
 };
 
-template <typename CallbackType>
-class OnChangingCallback : public OnSetCallback <CallbackType>
+template <typename CallbackType, typename CallbackDataType>
+class OnChangingCallback : public ChangeCallback <CallbackType, CallbackDataType>
 {
 private:
-	using super = OnSetCallback <CallbackType>;
+	using super = ChangeCallback <CallbackType, CallbackDataType>;
 
 public:
 	using super::super;
@@ -91,16 +143,16 @@ public:
 	}
 };
 
-template <>
-class OnChangingCallback <void> : public OnSetCallback <void>
+template <typename CallbackDataType>
+class OnChangingCallback <void, CallbackDataType> : public DummyChangeCallback
 {
 };
 
-template <typename CallbackType>
-class OnChangedCallback : public OnSetCallback <CallbackType>
+template <typename CallbackType, typename CallbackDataType>
+class OnChangedCallback : public ChangeCallback <CallbackType, CallbackDataType>
 {
 private:
-	using super = OnSetCallback <CallbackType>;
+	using super = ChangeCallback <CallbackType, CallbackDataType>;
 
 public:
 	using super::super;
@@ -114,8 +166,8 @@ public:
 	}
 };
 
-template <>
-class OnChangedCallback <void> : public OnSetCallback <void>
+template <typename CallbackDataType>
+class OnChangedCallback <void, CallbackDataType> : public DummyChangeCallback
 {
 };
 
