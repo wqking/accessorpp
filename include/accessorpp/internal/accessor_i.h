@@ -29,8 +29,8 @@ public:
 
 public:
 	template <typename AccessorType>
-	void onSet(const AccessorType & accessor, const typename AccessorType::ValueType & newValue) {
-		doOnSet<AccessorType, typename AccessorType::ValueType, CallbackType>(accessor, newValue);
+	void invokeCallback(const AccessorType & accessor, const typename AccessorType::ValueType & newValue) {
+		doInvokeCallback<AccessorType, typename AccessorType::ValueType, CallbackType>(accessor, newValue);
 	}
 
 	CallbackType & getCallback() {
@@ -43,21 +43,21 @@ public:
 
 private:
 	template <typename AccessorType, typename ValueType, typename C>
-	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
+	auto doInvokeCallback(const AccessorType & /*accessor*/, const ValueType & /*newValue*/)
 		-> typename std::enable_if<CanInvoke<C>::value, void>::type
 	{
 		callback();
 	}
 
 	template <typename AccessorType, typename ValueType, typename C>
-	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & newValue)
+	auto doInvokeCallback(const AccessorType & /*accessor*/, const ValueType & newValue)
 		-> typename std::enable_if<CanInvoke<C, ValueType>::value, void>::type
 	{
 		callback(newValue);
 	}
 
 	template <typename AccessorType, typename ValueType, typename C>
-	auto doOnSet(const AccessorType & accessor, const typename AccessorType::ValueType & newValue)
+	auto doInvokeCallback(const AccessorType & accessor, const ValueType & newValue)
 		-> typename std::enable_if<CanInvoke<C, ValueType, ValueType>::value, void>::type
 	{
 		callback(newValue, accessor.get());
@@ -75,7 +75,7 @@ public:
 	using ConstReturnType = void;
 
 	template <typename AccessorType>
-	void onSet(AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
+	void invokeCallback(AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
 	{
 	}
 

@@ -33,14 +33,26 @@ template <
 	typename PoliciesType = DefaultPolicies
 >
 class Accessor :
-	public internal_::AccessorStorage<Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value>,
-	private internal_::OnChangingCallback<typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type>,
-	private internal_::OnChangedCallback<typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type>
+	public internal_::AccessorStorage<
+			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
+		>,
+	private internal_::OnChangingCallback<
+			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type
+		>,
+	private internal_::OnChangedCallback<
+			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type
+		>
 {
 private:
-	using StorageType = internal_::AccessorStorage<Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value>;
-	using OnChangingCallbackType = internal_::OnChangingCallback<typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type>;
-	using OnChangedCallbackType = internal_::OnChangedCallback<typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type>;
+	using StorageType = internal_::AccessorStorage<
+			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
+		>;
+	using OnChangingCallbackType = internal_::OnChangingCallback<
+			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type
+		>;
+	using OnChangedCallbackType = internal_::OnChangedCallback<
+			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type
+		>;
 
 public:
 	using ValueType = Type;
@@ -73,9 +85,9 @@ public:
 	}
 
 	Accessor & set(const ValueType & value) {
-		this->OnChangingCallbackType::onSet(*this, value);
+		this->OnChangingCallbackType::invokeCallback(*this, value);
 		this->setter.set(value);
-		this->OnChangedCallbackType::onSet(*this, value);
+		this->OnChangedCallbackType::invokeCallback(*this, value);
 		return *this;
 	}
 
