@@ -198,33 +198,36 @@ public:
 
 private:
 	using StorageType = typename Storage::template StorageType<Type>;
+	using ThisType = Accessor<Type, Storage, OnSetCallbackType>;
 
 public:
-	Accessor()
+	Accessor() noexcept
 		: StorageType()
 	{
 	}
 
 	// The explict static_cast is required, otherwise it will call
 	// template <typename P1> explicit AccessorStorage(P1 && p2)
-	Accessor(const Accessor & other)
+	Accessor(const Accessor & other) noexcept
 		: StorageType(static_cast<const StorageType &>(other)) {
 	}
 
 	template <typename P1>
-	explicit Accessor(P1 && p1)
+	explicit Accessor(P1 && p1,
+		typename std::enable_if<std::is_pointer<P1>::value>::type * = nullptr) noexcept
+		//typename std::enable_if<! std::is_convertible<typename internal_::GetRawType<P1>::type, StorageType>::value>::type * = nullptr) noexcept
 		: StorageType(std::forward<P1>(p1))
 	{
 	}
 
 	template <typename P1, typename P2>
-	Accessor(P1 && p1, P2 && p2)
+	Accessor(P1 && p1, P2 && p2) noexcept
 		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2))
 	{
 	}
 
 	template <typename P1, typename P2, typename P3, typename P4>
-	Accessor(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
+	Accessor(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
 		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4))
 	{
 	}

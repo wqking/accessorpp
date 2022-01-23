@@ -3,6 +3,16 @@
 
 #include <sstream>
 
+TEST_CASE("Getter, ctor")
+{
+	int value = 5;
+	accessorpp::Getter<int> getter1(&value);
+	REQUIRE(getter1.get() == 5);
+
+	accessorpp::Getter<int> getter2(getter1);
+	REQUIRE(getter2.get() == 5);
+}
+
 TEST_CASE("Getter, int, variable")
 {
 	int value = 5;

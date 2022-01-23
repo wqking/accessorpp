@@ -3,6 +3,18 @@
 
 #include <sstream>
 
+TEST_CASE("Setter, ctor")
+{
+	int value = 0;
+	accessorpp::Setter<int> setter1(&value);
+	setter1 = 8;
+	REQUIRE(value == 8);
+
+	accessorpp::Setter<int> setter2(setter1);
+	setter2 = 5;
+	REQUIRE(value == 5);
+}
+
 TEST_CASE("Setter, int, variable")
 {
 	int value = 0;

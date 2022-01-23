@@ -4,6 +4,49 @@
 #include <iostream>
 #include <string>
 
+TEST_CASE("Accessor, ctor")
+{
+	accessorpp::Accessor<int> accessor1;
+	REQUIRE(accessor1.get() == 0);
+
+	accessor1 = 3;
+	REQUIRE(accessor1.get() == 3);
+
+	accessorpp::Accessor<int> accessor2(accessor1);
+	REQUIRE(accessor2.get() == 3);
+	accessor2 = 5;
+	REQUIRE(accessor1.get() == 3);
+	REQUIRE(accessor2.get() == 5);
+}
+
+TEST_CASE("Accessor, int *, default storage, variable")
+{
+	accessorpp::Accessor<int *> accessor;
+	REQUIRE(accessor.get() == nullptr);
+
+	int value1;
+	accessor = &value1;
+	REQUIRE(accessor.get() == &value1);
+
+	int value2;
+	accessor = &value2;
+	REQUIRE(accessor.get() == &value2);
+}
+
+TEST_CASE("Accessor, void *, default storage, variable")
+{
+	accessorpp::Accessor<void *> accessor;
+	REQUIRE(accessor.get() == nullptr);
+
+	int value1;
+	accessor = &value1;
+	REQUIRE(accessor.get() == &value1);
+
+	int value2;
+	accessor = &value2;
+	REQUIRE(accessor.get() == &value2);
+}
+
 TEST_CASE("Accessor, int, default storage, variable")
 {
 	accessorpp::Accessor<int> accessor;
