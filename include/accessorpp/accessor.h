@@ -29,6 +29,10 @@ template <typename CallbackType>
 class OnSetCallback
 {
 public:
+	using ReturnType = CallbackType &;
+	using ConstReturnType = const CallbackType &;
+
+public:
 	template <typename AccessorType>
 	void onSet(const AccessorType & accessor, const typename AccessorType::ValueType & newValue) {
 		doOnSet<AccessorType, typename AccessorType::ValueType, CallbackType>(accessor, newValue);
@@ -43,23 +47,23 @@ public:
 	}
 
 private:
-	template <typename AccessorType, typename P2, typename C>
+	template <typename AccessorType, typename ValueType, typename C>
 	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
 		-> typename std::enable_if<CanInvoke<C>::value, void>::type
 	{
 		callback();
 	}
 
-	template <typename AccessorType, typename P2, typename C>
+	template <typename AccessorType, typename ValueType, typename C>
 	auto doOnSet(const AccessorType & /*accessor*/, const typename AccessorType::ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, P2>::value, void>::type
+		-> typename std::enable_if<CanInvoke<C, ValueType>::value, void>::type
 	{
 		callback(newValue);
 	}
 
-	template <typename AccessorType, typename P2, typename C>
+	template <typename AccessorType, typename ValueType, typename C>
 	auto doOnSet(const AccessorType & accessor, const typename AccessorType::ValueType & newValue)
-		-> typename std::enable_if<CanInvoke<C, P2, P2>::value, void>::type
+		-> typename std::enable_if<CanInvoke<C, ValueType, ValueType>::value, void>::type
 	{
 		callback(newValue, accessor.get());
 	}
@@ -72,11 +76,34 @@ template <>
 class OnSetCallback <void>
 {
 public:
+	using ReturnType = void;
+	using ConstReturnType = void;
+
 	template <typename AccessorType>
 	void onSet(AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
 	{
 	}
 
+};
+
+template <typename CallbackType>
+class OnChangingCallback : public OnSetCallback <CallbackType>
+{
+private:
+	using super = OnSetCallback <CallbackType>;
+
+public:
+	using super::super;
+};
+
+template <typename CallbackType>
+class OnChangedCallback : public OnSetCallback <CallbackType>
+{
+private:
+	using super = OnSetCallback <CallbackType>;
+
+public:
+	using super::super;
 };
 
 template <typename Type, bool>
@@ -173,6 +200,7 @@ protected:
 
 } // namespace internal_
 
+
 struct UseStorage
 {
 	template <typename Type>
@@ -188,13 +216,17 @@ struct NoStorage
 template <
 	typename Type,
 	typename Storage = UseStorage,
-	typename OnSetCallbackType = void
+	typename OnChangingCallback_ = void,
+	typename OnChangedCallback_ = void
 >
-class Accessor : public Storage::template StorageType<Type>, public internal_::OnSetCallback<OnSetCallbackType>
+class Accessor : public Storage::template StorageType<Type>,
+	private internal_::OnChangingCallback<OnChangingCallback_>,
+	private internal_::OnChangedCallback<OnChangedCallback_>
 {
 private:
 	using StorageType = typename Storage::template StorageType<Type>;
-	using ThisType = Accessor<Type, Storage, OnSetCallbackType>;
+	using OnChangingCallbackType = internal_::OnChangingCallback<OnChangingCallback_>;
+	using OnChangedCallbackType = internal_::OnChangedCallback<OnChangedCallback_>;
 
 public:
 	using ValueType = Type;
@@ -223,8 +255,13 @@ public:
 	}
 
 	Accessor & operator = (const ValueType & value) {
-		this->onSet(*this, value);
+		return this->set(value);
+	}
+
+	Accessor & set(const ValueType & value) {
+		this->OnChangingCallbackType::onSet(*this, value);
 		this->setter.set(value);
+		this->OnChangedCallbackType::onSet(*this, value);
 		return *this;
 	}
 
@@ -244,6 +281,37 @@ public:
 	template <typename F>
 	void setSetter(const F & newSetter) {
 		this->setter = SetterType(newSetter);
+	}
+
+	auto getOnChanging() const -> typename OnChangingCallbackType::ConstReturnType {
+		return doGetCallback<OnChangingCallback_, OnChangingCallbackType>();
+	}
+
+	auto getOnChanging() -> typename OnChangingCallbackType::ReturnType {
+		return doGetCallback<OnChangingCallback_, OnChangingCallbackType>();
+	}
+
+	auto getOnChanged() const -> typename OnChangedCallbackType::ConstReturnType {
+		return doGetCallback<OnChangedCallback_, OnChangedCallbackType>();
+	}
+
+	auto getOnChanged() -> typename OnChangedCallbackType::ReturnType {
+		return doGetCallback<OnChangedCallback_, OnChangedCallbackType>();
+	}
+
+private:
+	template <typename CT, typename Class>
+	auto doGetCallback() const
+		-> typename std::enable_if<! std::is_void<CT>::value, const CT &>::type
+	{
+		return this->Class::getCallback();
+	}
+
+	template <typename CT, typename Class>
+	auto doGetCallback()
+		-> typename std::enable_if<! std::is_void<CT>::value, CT &>::type
+	{
+		return this->Class::getCallback();
 	}
 };
 

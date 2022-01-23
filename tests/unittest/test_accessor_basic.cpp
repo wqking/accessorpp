@@ -240,23 +240,38 @@ TEST_CASE("Accessor, callback")
 	using AccessorType = accessorpp::Accessor<
 		const int &,
 		accessorpp::UseStorage,
-		std::function<void (int, int)>
+		std::function<void (int, int)>,
+		std::function<void (int)>
 	>;
-	int newValue = 0;
-	int oldValue = 0;
-	AccessorType accessor;
-	accessor.getCallback() = [&newValue, &oldValue](const int newValue_, const int oldValue_) {
-		newValue = newValue_;
-		oldValue = oldValue_;
+	struct ValuePair
+	{
+		int newValue;
+		int oldValue;
 	};
-	REQUIRE(newValue == 0);
-	REQUIRE(oldValue == 0);
+	ValuePair changingValue {};
+	ValuePair changedValue {};
+	AccessorType accessor;
+	accessor.getOnChanging() = [&changingValue, &accessor](const int newValue, const int oldValue) {
+		changingValue.newValue = newValue;
+		changingValue.oldValue = oldValue;
+	};
+	accessor.getOnChanged() = [&changedValue](const int newValue) {
+		changedValue.newValue = newValue;
+	};
+	REQUIRE(changingValue.newValue == 0);
+	REQUIRE(changingValue.oldValue == 0);
+	REQUIRE(changedValue.newValue == 0);
+	REQUIRE(changedValue.oldValue == 0);
 
 	accessor = 3;
-	REQUIRE(newValue == 3);
-	REQUIRE(oldValue == 0);
+	REQUIRE(changingValue.newValue == 3);
+	REQUIRE(changingValue.oldValue == 0);
+	REQUIRE(changedValue.newValue == 3);
+	REQUIRE(changedValue.oldValue == 0);
 
 	accessor = 8;
-	REQUIRE(newValue == 8);
-	REQUIRE(oldValue == 3);
+	REQUIRE(changingValue.newValue == 8);
+	REQUIRE(changingValue.oldValue == 3);
+	REQUIRE(changedValue.newValue == 8);
+	REQUIRE(changedValue.oldValue == 0);
 }

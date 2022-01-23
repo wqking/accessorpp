@@ -49,10 +49,8 @@ public:
 	{
 	}
 
-	template <typename U>
-	explicit Getter(U && value,
-		typename std::enable_if<! std::is_member_object_pointer<U>::value && std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
-		: getterFunc([value]()->ValueType { return (ValueType)value; })
+	explicit Getter(const ValueType & value) noexcept
+		: getterFunc([value]()->ValueType { return value; })
 	{
 	}
 
