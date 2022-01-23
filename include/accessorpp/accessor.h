@@ -36,10 +36,10 @@ class Accessor :
 	public internal_::AccessorStorage<
 			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
 		>,
-	private internal_::OnChangingCallback<
+	public internal_::OnChangingCallback<
 			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type
 		>,
-	private internal_::OnChangedCallback<
+	public internal_::OnChangedCallback<
 			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type
 		>
 {
@@ -109,36 +109,7 @@ public:
 		this->setter = SetterType(newSetter);
 	}
 
-	auto getOnChanging() const -> typename OnChangingCallbackType::ConstReturnType {
-		return doGetCallback<typename OnChangingCallbackType::CallbackType, OnChangingCallbackType>();
-	}
-
-	auto getOnChanging() -> typename OnChangingCallbackType::ReturnType {
-		return doGetCallback<typename OnChangingCallbackType::CallbackType, OnChangingCallbackType>();
-	}
-
-	auto getOnChanged() const -> typename OnChangedCallbackType::ConstReturnType {
-		return doGetCallback<typename OnChangedCallbackType::CallbackType, OnChangedCallbackType>();
-	}
-
-	auto getOnChanged() -> typename OnChangedCallbackType::ReturnType {
-		return doGetCallback<typename OnChangedCallbackType::CallbackType, OnChangedCallbackType>();
-	}
-
 private:
-	template <typename CT, typename Class>
-	auto doGetCallback() const
-		-> typename std::enable_if<! std::is_void<CT>::value, const CT &>::type
-	{
-		return this->Class::getCallback();
-	}
-
-	template <typename CT, typename Class>
-	auto doGetCallback()
-		-> typename std::enable_if<! std::is_void<CT>::value, CT &>::type
-	{
-		return this->Class::getCallback();
-	}
 };
 
 template <typename T>

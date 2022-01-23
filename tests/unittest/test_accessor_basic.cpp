@@ -243,8 +243,8 @@ TEST_CASE("Accessor, int, NoStorage, member getValue() setValue()")
 TEST_CASE("Accessor, callback")
 {
 	struct Policies {
-		using OnChangingCallback = std::function<void (int, int)>;
-		using OnChangedCallback = std::function<void (int)>;
+		using OnChangingCallback = std::function<void (int)>;
+		using OnChangedCallback = std::function<void ()>;
 	};
 
 	using AccessorType = accessorpp::Accessor<
@@ -259,12 +259,12 @@ TEST_CASE("Accessor, callback")
 	ValuePair changingValue {};
 	ValuePair changedValue {};
 	AccessorType accessor;
-	accessor.getOnChanging() = [&changingValue, &accessor](const int newValue, const int oldValue) {
+	accessor.onChanging() = [&changingValue, &accessor](const int newValue) {
 		changingValue.newValue = newValue;
-		changingValue.oldValue = oldValue;
+		changingValue.oldValue = accessor;
 	};
-	accessor.getOnChanged() = [&changedValue](const int newValue) {
-		changedValue.newValue = newValue;
+	accessor.onChanged() = [&changedValue, &accessor]() {
+		changedValue.newValue = accessor;
 	};
 	REQUIRE(changingValue.newValue == 0);
 	REQUIRE(changingValue.oldValue == 0);

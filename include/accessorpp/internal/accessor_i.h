@@ -19,15 +19,10 @@ namespace accessorpp {
 
 namespace internal_ {
 
-template <typename CallbackType_>
+template <typename CallbackType>
 class OnSetCallback
 {
-public:
-	using CallbackType = CallbackType_;
-	using ReturnType = CallbackType &;
-	using ConstReturnType = const CallbackType &;
-
-public:
+protected:
 	template <typename AccessorType>
 	void invokeCallback(const AccessorType & accessor, const typename AccessorType::ValueType & newValue) {
 		doInvokeCallback<AccessorType, typename AccessorType::ValueType, CallbackType>(accessor, newValue);
@@ -70,10 +65,7 @@ private:
 template <>
 class OnSetCallback <void>
 {
-public:
-	using ReturnType = void;
-	using ConstReturnType = void;
-
+protected:
 	template <typename AccessorType>
 	void invokeCallback(AccessorType & /*accessor*/, const typename AccessorType::ValueType & /*newValue*/)
 	{
@@ -89,6 +81,19 @@ private:
 
 public:
 	using super::super;
+
+	const CallbackType & onChanging() const {
+		return super::getCallback();
+	}
+
+	CallbackType & onChanging() {
+		return super::getCallback();
+	}
+};
+
+template <>
+class OnChangingCallback <void> : public OnSetCallback <void>
+{
 };
 
 template <typename CallbackType>
@@ -99,6 +104,19 @@ private:
 
 public:
 	using super::super;
+
+	const CallbackType & onChanged() const {
+		return super::getCallback();
+	}
+
+	CallbackType & onChanged() {
+		return super::getCallback();
+	}
+};
+
+template <>
+class OnChangedCallback <void> : public OnSetCallback <void>
+{
 };
 
 template <typename Type, bool>
