@@ -67,11 +67,12 @@ public:
 };
 
 template <typename Type, bool>
-struct AccessorStorage;
+class AccessorStorage;
 
 template <typename Type>
-struct AccessorStorage <Type, true>
+class AccessorStorage <Type, true>
 {
+public:
 	using GetterType = Getter<Type>;
 	using SetterType = Setter<Type>;
 	using StorageValueType = typename std::remove_cv<typename std::remove_reference<Type>::type>::type;
@@ -92,40 +93,26 @@ struct AccessorStorage <Type, true>
 	{
 	}
 
-	template <typename P1>
-	explicit AccessorStorage(P1 && p1)
-		: getter(std::forward<P1>(p1)), setter(std::forward<P1>(p1))
-	{
+	// The functions getValue and setValue should be used to implement getter/setter,
+	// don't use them to access the value directly outside of getter/setter.
+	const StorageValueType & getValue() const {
+		return storedValue;
 	}
 
-	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr)
-		: getter(std::forward<P1>(p1)), setter(std::forward<P2>(p2))
-	{
+	void setValue(const StorageValueType & newValue) {
+		storedValue = newValue;
 	}
 
-	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr)
-		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P1>(p1), std::forward<P2>(p2))
-	{
-	}
-
-	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
-		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P3>(p3), std::forward<P4>(p4))
-	{
-	}
-
+protected:
 	StorageValueType storedValue;
-	Getter<Type> getter;
-	Setter<Type> setter;
+	GetterType getter;
+	SetterType setter;
 };
 
 template <typename Type>
-struct AccessorStorage <Type, false>
+class AccessorStorage <Type, false>
 {
+public:
 	using GetterType = Getter<Type>;
 	using SetterType = Setter<Type>;
 
@@ -140,33 +127,34 @@ struct AccessorStorage <Type, false>
 	}
 
 	template <typename P1>
-	explicit AccessorStorage(P1 && p1)
-		: getter(std::forward<P1>(p1)), setter(std::forward<P1>(p1))
+	explicit AccessorStorage(P1 * p1) noexcept
+		: getter(p1), setter(p1)
 	{
 	}
 
 	template <typename P1, typename P2>
 	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr)
+		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr) noexcept
 		: getter(std::forward<P1>(p1)), setter(std::forward<P2>(p2))
 	{
 	}
 
 	template <typename P1, typename P2>
 	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr)
+		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr) noexcept
 		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P1>(p1), std::forward<P2>(p2))
 	{
 	}
 
 	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4)
+	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
 		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P3>(p3), std::forward<P4>(p4))
 	{
 	}
 
-	Getter<Type> getter;
-	Setter<Type> setter;
+protected:
+	GetterType getter;
+	SetterType setter;
 };
 
 
@@ -189,16 +177,18 @@ template <
 	typename Storage = UseStorage,
 	typename OnSetCallbackType = void
 >
-class Accessor : private Storage::template StorageType<Type>, public internal_::OnSetCallback<OnSetCallbackType>
+class Accessor : public Storage::template StorageType<Type>, public internal_::OnSetCallback<OnSetCallbackType>
 {
-public:
-	using ValueType = Type;
-
-	static constexpr bool useStorage = std::is_same<Storage, UseStorage>::value;
-
 private:
 	using StorageType = typename Storage::template StorageType<Type>;
 	using ThisType = Accessor<Type, Storage, OnSetCallbackType>;
+
+public:
+	using ValueType = Type;
+	using GetterType = typename StorageType::GetterType;
+	using SetterType = typename StorageType::SetterType;
+
+	static constexpr bool useStorage = std::is_same<Storage, UseStorage>::value;
 
 public:
 	Accessor() noexcept
@@ -212,25 +202,7 @@ public:
 		: StorageType(static_cast<const StorageType &>(other)) {
 	}
 
-	template <typename P1>
-	explicit Accessor(P1 && p1,
-		typename std::enable_if<std::is_pointer<P1>::value>::type * = nullptr) noexcept
-		//typename std::enable_if<! std::is_convertible<typename internal_::GetRawType<P1>::type, StorageType>::value>::type * = nullptr) noexcept
-		: StorageType(std::forward<P1>(p1))
-	{
-	}
-
-	template <typename P1, typename P2>
-	Accessor(P1 && p1, P2 && p2) noexcept
-		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2))
-	{
-	}
-
-	template <typename P1, typename P2, typename P3, typename P4>
-	Accessor(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
-		: StorageType(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4))
-	{
-	}
+	using StorageType::StorageType;
 
 	Accessor & operator = (const Accessor & other) {
 		*this = other.get();
@@ -251,6 +223,15 @@ public:
 		return get();
 	}
 
+	template <typename F>
+	void setGetter(const F & newGetter) {
+		this->getter = GetterType(newGetter);
+	}
+
+	template <typename F>
+	void setSetter(const F & newSetter) {
+		this->setter = SetterType(newSetter);
+	}
 };
 
 template <typename T>

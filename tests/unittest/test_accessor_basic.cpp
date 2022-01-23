@@ -150,6 +150,39 @@ TEST_CASE("Accessor, MyValue, default storage")
 	REQUIRE(accessor.get().getValue() == 8);
 }
 
+TEST_CASE("Accessor, int, default storage, variable, customized getter/setter")
+{
+	int getCount = 0;
+	int setCount = 0;
+	accessorpp::Accessor<int> accessor;
+	accessor.setGetter([&accessor, &getCount]() {
+		++getCount;
+		return accessor.getValue();
+	});
+	accessor.setSetter([&accessor, &setCount](const int value) {
+		++setCount;
+		accessor.setValue(value);
+	});
+
+	REQUIRE(accessor.get() == 0);
+	REQUIRE(getCount == 1);
+	REQUIRE(setCount == 0);
+
+	accessor = 3;
+	REQUIRE(getCount == 1);
+	REQUIRE(setCount == 1);
+	REQUIRE(accessor.get() == 3);
+	REQUIRE(getCount == 2);
+	REQUIRE(setCount == 1);
+
+	accessor = 8;
+	REQUIRE(getCount == 2);
+	REQUIRE(setCount == 2);
+	REQUIRE(accessor.get() == 8);
+	REQUIRE(getCount == 3);
+	REQUIRE(setCount == 2);
+}
+
 TEST_CASE("Accessor, int, NoStorage, variable")
 {
 	int value{};
