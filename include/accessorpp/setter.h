@@ -22,12 +22,12 @@
 
 namespace accessorpp {
 
-template <typename Type>
+template <typename Type_>
 class Setter
 {
 public:
-	using ValueType = Type;
-	using RawType = typename internal_::GetRawType<Type>::Type;
+	using Type = Type_;
+	using ValueType = typename internal_::GetEssentialType<Type>::Type;
 
 public:
 	Setter()
@@ -37,21 +37,21 @@ public:
 
 	template <typename U>
 	explicit Setter(U * address,
-		typename std::enable_if<std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
 		: setterFunc([address](const ValueType & value) { *address = (U)(value); })
 	{
 	}
 
 	template <typename U, typename C>
 	explicit Setter(U C::* address, C * instance,
-		typename std::enable_if<std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
 		: setterFunc([address, instance](const ValueType & value) { instance->*address = (U)(value); })
 	{
 	}
 
 	template <typename F>
 	explicit Setter(F func,
-		typename std::enable_if<internal_::CanInvoke<F, RawType>::value>::type * = nullptr) noexcept
+		typename std::enable_if<internal_::CanInvoke<F, ValueType>::value>::type * = nullptr) noexcept
 		: setterFunc([func](const ValueType & value) { func(value); })
 	{
 	}

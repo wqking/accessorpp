@@ -22,12 +22,12 @@
 
 namespace accessorpp {
 
-template <typename Type>
+template <typename Type_>
 class Getter
 {
 public:
-	using ValueType = Type;
-	using RawType = typename internal_::GetRawType<Type>::Type;
+	using Type = Type_;
+	using ValueType = typename internal_::GetEssentialType<Type>::Type;
 
 public:
 	Getter()
@@ -37,34 +37,34 @@ public:
 
 	template <typename U>
 	explicit Getter(const U * address,
-		typename std::enable_if<std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
-		: getterFunc([address]()->ValueType { return (ValueType)*address; })
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
+		: getterFunc([address]()->Type { return (Type)*address; })
 	{
 	}
 
 	template <typename U, typename C>
 	explicit Getter(const U C::* address, const C * instance,
-		typename std::enable_if<std::is_convertible<U, RawType>::value>::type * = nullptr) noexcept
-		: getterFunc([address, instance]()->ValueType { return (ValueType)(instance->*address); })
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
+		: getterFunc([address, instance]()->Type { return (Type)(instance->*address); })
 	{
 	}
 
-	explicit Getter(const ValueType & value) noexcept
-		: getterFunc([value]()->ValueType { return value; })
+	explicit Getter(const Type & value) noexcept
+		: getterFunc([value]()->Type { return value; })
 	{
 	}
 
 	template <typename F>
 	explicit Getter(F func,
 		typename std::enable_if<internal_::CanInvoke<F>::value>::type * = nullptr) noexcept
-		: getterFunc([func]()->ValueType { return (ValueType)func(); })
+		: getterFunc([func]()->Type { return (Type)func(); })
 	{
 	}
 
 	template <typename F, typename C>
 	explicit Getter(F func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
-		: getterFunc([func, instance]()->ValueType { return (ValueType)((instance->*func)()); })
+		: getterFunc([func, instance]()->Type { return (Type)((instance->*func)()); })
 	{
 	}
 
@@ -88,16 +88,16 @@ public:
 		return *this;
 	}
 
-	ValueType get() const {
+	Type get() const {
 		return getterFunc();
 	}
 
-	operator ValueType() const {
+	operator Type() const {
 		return get();
 	}
 
 private:
-	std::function<ValueType ()> getterFunc;
+	std::function<Type ()> getterFunc;
 };
 
 template <typename T>

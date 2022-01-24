@@ -33,7 +33,7 @@ struct CanInvoke
 };
 
 template <typename T>
-struct GetRawType
+struct GetEssentialType
 {
 	using Type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };

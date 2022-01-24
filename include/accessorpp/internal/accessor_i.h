@@ -173,12 +173,12 @@ class OnChangedCallback <void, CallbackDataType> : public DummyChangeCallback
 {
 };
 
-template <typename Type>
+template <typename Type_>
 class AccessorStorageBase
 {
 public:
-	using GetterType = Getter<Type>;
-	using SetterType = Setter<Type>;
+	using GetterType = Getter<Type_>;
+	using SetterType = Setter<Type_>;
 
 public:
 	AccessorStorageBase()
@@ -275,43 +275,42 @@ protected:
 	const bool readOnly;
 };
 
-template <typename Type, bool>
+template <typename Type_, bool>
 class AccessorStorage;
 
-template <typename Type>
-class AccessorStorage <Type, true> : public AccessorStorageBase<Type>
+template <typename Type_>
+class AccessorStorage <Type_, true> : public AccessorStorageBase<Type_>
 {
 private:
-	using super = AccessorStorageBase<Type>;
+	using super = AccessorStorageBase<Type_>;
+	using ValueType = typename std::remove_cv<typename std::remove_reference<Type_>::type>::type;
 
 public:
-	using StorageValueType = typename std::remove_cv<typename std::remove_reference<Type>::type>::type;
-
 	AccessorStorage()
 		:
-			super(&AccessorStorage::storedValue, this, &AccessorStorage::storedValue, this),
-			storedValue()
+			super(&AccessorStorage::value, this, &AccessorStorage::value, this),
+			value()
 	{
 	}
 
 	explicit AccessorStorage(std::nullptr_t)
 		:
-			super(&AccessorStorage::storedValue, this, nullptr),
-			storedValue()
+			super(&AccessorStorage::value, this, nullptr),
+			value()
 	{
 	}
 
 	AccessorStorage(const AccessorStorage & other)
 		:
-			super(&AccessorStorage::storedValue, this, &AccessorStorage::storedValue, this),
-			storedValue(other.storedValue)
+			super(&AccessorStorage::value, this, &AccessorStorage::value, this),
+			value(other.value)
 	{
 	}
 
 	AccessorStorage(AccessorStorage && other)
 		:
 			super(static_cast<super &&>(other)),
-			storedValue(std::move(other.storedValue))
+			value(std::move(other.value))
 	{
 	}
 
@@ -319,7 +318,7 @@ public:
 	explicit AccessorStorage(P1 * p1) noexcept
 		:
 			super(p1),
-			storedValue()
+			value()
 	{
 	}
 
@@ -327,7 +326,7 @@ public:
 	AccessorStorage(P1 && p1, P2 && p2) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2)),
-			storedValue()
+			value()
 	{
 	}
 
@@ -335,7 +334,7 @@ public:
 	AccessorStorage(P1 && p1, std::nullptr_t) noexcept
 		:
 			super(std::forward<P1>(p1), nullptr),
-			storedValue()
+			value()
 	{
 	}
 
@@ -343,7 +342,7 @@ public:
 	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4)),
-			storedValue()
+			value()
 	{
 	}
 
@@ -351,30 +350,30 @@ public:
 	AccessorStorage(P1 && p1, P2 && p2, std::nullptr_t) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2), nullptr),
-			storedValue()
+			value()
 	{
 	}
 
 	// The functions getValue and setValue should be used to implement getter/setter,
 	// don't use them to access the value directly outside of getter/setter.
-	const StorageValueType & getValue() const {
-		return storedValue;
+	const ValueType & getValue() const {
+		return value;
 	}
 
 	// This doesn't respect "readOnly".
-	void setValue(const StorageValueType & newValue) {
-		storedValue = newValue;
+	void setValue(const ValueType & newValue) {
+		value = newValue;
 	}
 
 private:
-	StorageValueType storedValue;
+	ValueType value;
 };
 
-template <typename Type>
-class AccessorStorage <Type, false> : public AccessorStorageBase<Type>
+template <typename Type_>
+class AccessorStorage <Type_, false> : public AccessorStorageBase<Type_>
 {
 private:
-	using super = AccessorStorageBase<Type>;
+	using super = AccessorStorageBase<Type_>;
 
 public:
 	using super::super;

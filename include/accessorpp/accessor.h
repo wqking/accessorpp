@@ -84,26 +84,26 @@ public:
 		return *this;
 	}
 
-	Accessor & operator = (const ValueType & value) {
-		return this->set(value);
+	Accessor & operator = (const ValueType & newValue) {
+		return this->set(newValue);
 	}
 
-	Accessor & set(const ValueType & value) {
+	Accessor & set(const ValueType & newValue) {
 		this->doCheckWritable();
 
-		this->OnChangingCallbackType::invokeCallback(value);
-		this->setter.set(value);
-		this->OnChangedCallbackType::invokeCallback(value);
+		this->OnChangingCallbackType::invokeCallback(newValue);
+		this->setter.set(newValue);
+		this->OnChangedCallbackType::invokeCallback(newValue);
 		return *this;
 	}
 
 	template <typename CD>
-	Accessor & set(const ValueType & value, CD && callbackData) {
+	Accessor & set(const ValueType & newValue, CD && callbackData) {
 		this->doCheckWritable();
 
-		this->OnChangingCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
-		this->setter.set(value);
-		this->OnChangedCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
+		this->OnChangingCallbackType::invokeCallback(newValue, std::forward<CD>(callbackData));
+		this->setter.set(newValue);
+		this->OnChangedCallbackType::invokeCallback(newValue, std::forward<CD>(callbackData));
 		return *this;
 	}
 
