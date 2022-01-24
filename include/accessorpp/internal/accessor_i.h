@@ -14,11 +14,6 @@
 #ifndef ACCESSOR_I_H_578722158669
 #define ACCESSOR_I_H_578722158669
 
-#include <cstddef>
-#include <stdexcept>
-
-namespace accessorpp {
-
 namespace internal_ {
 
 template <typename CallbackType>
@@ -174,14 +169,14 @@ class OnChangedCallback <void, CallbackDataType> : public DummyChangeCallback
 };
 
 template <typename Type_>
-class AccessorStorageBase
+class AccessorRoot
 {
-public:
+protected:
 	using GetterType = Getter<Type_>;
 	using SetterType = Setter<Type_>;
 
 public:
-	AccessorStorageBase()
+	AccessorRoot()
 		:
 			getter(),
 			setter(),
@@ -189,7 +184,7 @@ public:
 	{
 	}
 
-	AccessorStorageBase(const AccessorStorageBase & other)
+	AccessorRoot(const AccessorRoot & other)
 		:
 			getter(other.getter),
 			setter(other.setter),
@@ -197,7 +192,7 @@ public:
 	{
 	}
 
-	AccessorStorageBase(AccessorStorageBase && other)
+	AccessorRoot(AccessorRoot && other)
 		:
 			getter(std::move(other.getter)),
 			setter(std::move(other.setter)),
@@ -205,25 +200,8 @@ public:
 	{
 	}
 
-	explicit AccessorStorageBase(std::nullptr_t)
-		:
-			getter(),
-			setter(),
-			readOnly(true)
-	{
-	}
-
-	template <typename P1>
-	explicit AccessorStorageBase(P1 * p1) noexcept
-		:
-			getter(p1),
-			setter(p1),
-			readOnly(false)
-	{
-	}
-
 	template <typename P1, typename P2>
-	AccessorStorageBase(P1 && p1, P2 && p2) noexcept
+	AccessorRoot(P1 && p1, P2 && p2) noexcept
 		:
 			getter(std::forward<P1>(p1)),
 			setter(std::forward<P2>(p2)),
@@ -232,7 +210,7 @@ public:
 	}
 
 	template <typename P1>
-	AccessorStorageBase(P1 && p1, std::nullptr_t) noexcept
+	AccessorRoot(P1 && p1, NoSetter) noexcept
 		:
 			getter(std::forward<P1>(p1)),
 			setter(),
@@ -241,20 +219,11 @@ public:
 	}
 
 	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorageBase(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
+	AccessorRoot(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
 		:
 			getter(std::forward<P1>(p1), std::forward<P2>(p2)),
 			setter(std::forward<P3>(p3), std::forward<P4>(p4)),
 			readOnly(false)
-	{
-	}
-
-	template <typename P1, typename P2>
-	AccessorStorageBase(P1 && p1, P2 && p2, std::nullptr_t) noexcept
-		:
-			getter(std::forward<P1>(p1), std::forward<P2>(p2)),
-			setter(),
-			readOnly(true)
 	{
 	}
 
@@ -276,95 +245,93 @@ protected:
 };
 
 template <typename Type_, bool>
-class AccessorStorage;
+class AccessorBase;
 
 template <typename Type_>
-class AccessorStorage <Type_, true> : public AccessorStorageBase<Type_>
+class AccessorBase <Type_, true> : public AccessorRoot<Type_>
 {
 private:
-	using super = AccessorStorageBase<Type_>;
+	using super = AccessorRoot<Type_>;
 	using ValueType = typename std::remove_cv<typename std::remove_reference<Type_>::type>::type;
 
 public:
-	AccessorStorage(const ValueType & newValue = ValueType())
+	using GetterType = typename super::GetterType;
+	using SetterType = typename super::SetterType;
+
+public:
+	AccessorBase(const ValueType & newValue = ValueType())
 		:
-			super(&AccessorStorage::value, this, &AccessorStorage::value, this),
+			super(&AccessorBase::value, this, &AccessorBase::value, this),
 			value(newValue)
 	{
 	}
 
-	explicit AccessorStorage(std::nullptr_t, const ValueType & newValue = ValueType()) noexcept
+	AccessorBase(const AccessorBase & other)
 		:
-			super(&AccessorStorage::value, this, nullptr),
-			value(newValue)
-	{
-	}
-
-	AccessorStorage(const AccessorStorage & other)
-		:
-			super(&AccessorStorage::value, this, &AccessorStorage::value, this),
+			super(&AccessorBase::value, this, &AccessorBase::value, this),
 			value(other.value)
 	{
 	}
 
-	AccessorStorage(AccessorStorage && other)
+	AccessorBase(AccessorBase && other)
 		:
 			super(static_cast<super &&>(other)),
 			value(std::move(other.value))
 	{
 	}
 
-	template <typename P1>
-	explicit AccessorStorage(P1 && p1, const ValueType & newValue = ValueType(),
-		typename std::enable_if<! internal_::IsNullPtr<P1>::value>::type * = nullptr) noexcept
-		:
-			super(std::forward<P1>(p1)),
-			value(newValue)
-	{
-	}
-
 	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2, const ValueType & newValue = ValueType(),
-		typename std::enable_if<! internal_::IsNullPtr<P1>::value && ! ! internal_::IsNullPtr<P2>::value>::type * = nullptr) noexcept
+	AccessorBase(P1 && p1, P2 && p2, const ValueType & newValue = ValueType()) noexcept
 		:
-			super(std::forward<P1>(p1), std::forward<P2>(p2)),
+			super(std::forward<P1>(p1),
+				std::forward<P2>(p2)),
+			value(newValue)
+	{
+	}
+
+	template <typename P2>
+	AccessorBase(DefaultGetter, P2 && p2, const ValueType & newValue = ValueType()) noexcept
+		:
+			super(GetterType(&AccessorBase::value, this),
+				std::forward<P2>(p2)),
 			value(newValue)
 	{
 	}
 
 	template <typename P1>
-	AccessorStorage(P1 && p1, std::nullptr_t, const ValueType & newValue = ValueType(),
-		typename std::enable_if<! internal_::IsNullPtr<P1>::value>::type * = nullptr) noexcept
+	AccessorBase(P1 && p1, DefaultSetter, const ValueType & newValue = ValueType()) noexcept
 		:
-			super(std::forward<P1>(p1), nullptr),
+			super(GetterType(std::forward<P1>(p1)),
+				SetterType(&AccessorBase::value, this)),
+			value(newValue)
+	{
+	}
+
+	AccessorBase(DefaultGetter, DefaultSetter, const ValueType & newValue = ValueType()) noexcept
+		:
+			super(GetterType(&AccessorBase::value, this),
+				SetterType(&AccessorBase::value, this)),
 			value(newValue)
 	{
 	}
 
 	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4, const ValueType & newValue = ValueType()) noexcept
+	AccessorBase(P1 && p1, P2 && p2, P3 && p3, P4 && p4, const ValueType & newValue = ValueType()) noexcept
 		:
-			super(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4)),
+			super(std::forward<P1>(p1), std::forward<P2>(p2),
+				std::forward<P3>(p3), std::forward<P4>(p4)),
 			value(newValue)
 	{
 	}
 
-	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2, std::nullptr_t, const ValueType & newValue = ValueType()) noexcept
-		:
-			super(std::forward<P1>(p1), std::forward<P2>(p2), nullptr),
-			value(newValue)
-	{
-	}
-
-	// The functions getValue and setValue should be used to implement getter/setter,
+	// The functions directGet and directSet should be used to implement getter/setter,
 	// don't use them to access the value directly outside of getter/setter.
-	const ValueType & getValue() const {
+	const ValueType & directGet() const {
 		return value;
 	}
 
 	// This doesn't respect "readOnly".
-	void setValue(const ValueType & newValue) {
+	void directSet(const ValueType & newValue) {
 		value = newValue;
 	}
 
@@ -373,10 +340,14 @@ private:
 };
 
 template <typename Type_>
-class AccessorStorage <Type_, false> : public AccessorStorageBase<Type_>
+class AccessorBase <Type_, false> : public AccessorRoot<Type_>
 {
 private:
-	using super = AccessorStorageBase<Type_>;
+	using super = AccessorRoot<Type_>;
+
+public:
+	using GetterType = typename super::GetterType;
+	using SetterType = typename super::SetterType;
 
 public:
 	using super::super;
@@ -385,8 +356,6 @@ public:
 
 } // namespace internal_
 
-
-} // namespace accessorpp
 
 
 #endif

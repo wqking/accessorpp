@@ -5,6 +5,7 @@ set(SRC_TEST
 	test_getter.cpp
 	test_setter.cpp
 	test_accessor_basic.cpp
+	test_accessor_default_no_getter_setter.cpp
 	test_accessor_operator_binary.cpp
 	test_accessor_operator_binary_assignment.cpp
 	test_accessor_operator_logic.cpp

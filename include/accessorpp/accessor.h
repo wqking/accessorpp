@@ -16,22 +16,33 @@
 
 #include "accessorpp/getter.h"
 #include "accessorpp/setter.h"
-#include "accessorpp/internal/accessor_i.h"
 
 #include <functional>
 #include <type_traits>
 #include <iostream> 
+#include <cstddef>
+#include <stdexcept>
 
 namespace accessorpp {
 
 struct DefaultPolicies {};
+
+struct DefaultGetter {};
+struct DefaultSetter {};
+struct NoSetter {};
+
+constexpr DefaultGetter defaultGetter;
+constexpr DefaultSetter defaultSetter;
+constexpr NoSetter noSetter;
+
+#include "accessorpp/internal/accessor_i.h"
 
 template <
 	typename Type,
 	typename PoliciesType = DefaultPolicies
 >
 class Accessor :
-	public internal_::AccessorStorage<
+	public internal_::AccessorBase<
 			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
 		>,
 	public internal_::OnChangingCallback<
@@ -44,7 +55,7 @@ class Accessor :
 		>
 {
 private:
-	using StorageType = internal_::AccessorStorage<
+	using BaseType = internal_::AccessorBase<
 			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
 		>;
 	using OnChangingCallbackType = internal_::OnChangingCallback<
@@ -58,24 +69,24 @@ private:
 
 public:
 	using ValueType = Type;
-	using GetterType = typename StorageType::GetterType;
-	using SetterType = typename StorageType::SetterType;
+	using GetterType = typename BaseType::GetterType;
+	using SetterType = typename BaseType::SetterType;
 
 	static constexpr bool useStorage = internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value;
 
 public:
 	Accessor() noexcept
-		: StorageType()
+		: BaseType()
 	{
 	}
 
 	// The explict static_cast is required, otherwise it will call
-	// template <typename P1> explicit AccessorStorage(P1 && p2)
+	// template <typename P1> explicit AccessorBase(P1 && p2)
 	Accessor(const Accessor & other) noexcept
-		: StorageType(static_cast<const StorageType &>(other)) {
+		: BaseType(static_cast<const BaseType &>(other)) {
 	}
 
-	using StorageType::StorageType;
+	using BaseType::BaseType;
 
 	Accessor & operator = (const Accessor & other) {
 		*this = other.get();

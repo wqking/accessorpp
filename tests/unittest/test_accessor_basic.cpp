@@ -170,11 +170,11 @@ TEST_CASE("Accessor, int, default storage, variable, customized getter/setter")
 	accessorpp::Accessor<int> accessor;
 	accessor.setGetter([&accessor, &getCount]() {
 		++getCount;
-		return accessor.getValue();
+		return accessor.directGet();
 	});
 	accessor.setSetter([&accessor, &setCount](const int value) {
 		++setCount;
-		accessor.setValue(value);
+		accessor.directSet(value);
 	});
 
 	REQUIRE(accessor.get() == 0);
@@ -204,7 +204,7 @@ struct NoStoragePolicies
 TEST_CASE("Accessor, int, NoStorage, variable")
 {
 	int value{};
-	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value);
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value, &value);
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;
@@ -339,14 +339,14 @@ TEST_CASE("Accessor, default storage, read only")
 	using Accessor = accessorpp::Accessor<int>;
 
 	{
-		Accessor accessor(nullptr);
+		Accessor accessor(accessorpp::defaultGetter, accessorpp::noSetter);
 		REQUIRE(accessor == 0);
 		REQUIRE(accessor.isReadOnly());
 		CHECK_THROWS(accessor = 5);
 	}
 
 	{
-		Accessor accessor(nullptr, 3);
+		Accessor accessor(accessorpp::defaultGetter, accessorpp::noSetter, 3);
 		REQUIRE(accessor == 3);
 		REQUIRE(accessor.isReadOnly());
 		CHECK_THROWS(accessor = 5);
@@ -354,9 +354,17 @@ TEST_CASE("Accessor, default storage, read only")
 
 	{
 		int n = 5;
-		Accessor accessor(&n, 3);
-		REQUIRE(accessor == 3);
+		Accessor accessor(&n, accessorpp::noSetter, 3);
+		REQUIRE(accessor == 5);
 		REQUIRE(accessor.isReadOnly());
-		CHECK_THROWS(accessor = 5);
+		CHECK_THROWS(accessor = 6);
+	}
+
+	{
+		Accessor accessor(accessorpp::defaultGetter, accessorpp::defaultSetter, 3);
+		REQUIRE(accessor == 3);
+		REQUIRE(! accessor.isReadOnly());
+		accessor = 5;
+		REQUIRE(accessor == 5);
 	}
 }
