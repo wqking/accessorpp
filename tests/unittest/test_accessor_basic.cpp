@@ -334,10 +334,29 @@ TEST_CASE("Accessor, callback, CallbackData")
 	REQUIRE(changedValue.oldValue == 0);
 }
 
-TEST_CASE("Accessor, read only")
+TEST_CASE("Accessor, default storage, read only")
 {
 	using Accessor = accessorpp::Accessor<int>;
-	Accessor accessor(nullptr);
-	REQUIRE(accessor.isReadOnly());
-	CHECK_THROWS(accessor = 5);
+
+	{
+		Accessor accessor(nullptr);
+		REQUIRE(accessor == 0);
+		REQUIRE(accessor.isReadOnly());
+		CHECK_THROWS(accessor = 5);
+	}
+
+	{
+		Accessor accessor(nullptr, 3);
+		REQUIRE(accessor == 3);
+		REQUIRE(accessor.isReadOnly());
+		CHECK_THROWS(accessor = 5);
+	}
+
+	{
+		int n = 5;
+		Accessor accessor(&n, 3);
+		REQUIRE(accessor == 3);
+		REQUIRE(accessor.isReadOnly());
+		CHECK_THROWS(accessor = 5);
+	}
 }

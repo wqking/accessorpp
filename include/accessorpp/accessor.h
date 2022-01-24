@@ -24,9 +24,7 @@
 
 namespace accessorpp {
 
-struct DefaultPolicies
-{
-};
+struct DefaultPolicies {};
 
 template <
 	typename Type,

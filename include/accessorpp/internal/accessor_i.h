@@ -286,17 +286,17 @@ private:
 	using ValueType = typename std::remove_cv<typename std::remove_reference<Type_>::type>::type;
 
 public:
-	AccessorStorage()
+	AccessorStorage(const ValueType & newValue = ValueType())
 		:
 			super(&AccessorStorage::value, this, &AccessorStorage::value, this),
-			value()
+			value(newValue)
 	{
 	}
 
-	explicit AccessorStorage(std::nullptr_t)
+	explicit AccessorStorage(std::nullptr_t, const ValueType & newValue = ValueType()) noexcept
 		:
 			super(&AccessorStorage::value, this, nullptr),
-			value()
+			value(newValue)
 	{
 	}
 
@@ -315,42 +315,45 @@ public:
 	}
 
 	template <typename P1>
-	explicit AccessorStorage(P1 * p1) noexcept
+	explicit AccessorStorage(P1 && p1, const ValueType & newValue = ValueType(),
+		typename std::enable_if<! internal_::IsNullPtr<P1>::value>::type * = nullptr) noexcept
 		:
-			super(p1),
-			value()
+			super(std::forward<P1>(p1)),
+			value(newValue)
 	{
 	}
 
 	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2) noexcept
+	AccessorStorage(P1 && p1, P2 && p2, const ValueType & newValue = ValueType(),
+		typename std::enable_if<! internal_::IsNullPtr<P1>::value && ! ! internal_::IsNullPtr<P2>::value>::type * = nullptr) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2)),
-			value()
+			value(newValue)
 	{
 	}
 
 	template <typename P1>
-	AccessorStorage(P1 && p1, std::nullptr_t) noexcept
+	AccessorStorage(P1 && p1, std::nullptr_t, const ValueType & newValue = ValueType(),
+		typename std::enable_if<! internal_::IsNullPtr<P1>::value>::type * = nullptr) noexcept
 		:
 			super(std::forward<P1>(p1), nullptr),
-			value()
+			value(newValue)
 	{
 	}
 
 	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
+	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4, const ValueType & newValue = ValueType()) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4)),
-			value()
+			value(newValue)
 	{
 	}
 
 	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2, std::nullptr_t) noexcept
+	AccessorStorage(P1 && p1, P2 && p2, std::nullptr_t, const ValueType & newValue = ValueType()) noexcept
 		:
 			super(std::forward<P1>(p1), std::forward<P2>(p2), nullptr),
-			value()
+			value(newValue)
 	{
 	}
 

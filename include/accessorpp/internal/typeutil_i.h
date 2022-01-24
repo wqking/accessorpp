@@ -39,6 +39,12 @@ struct GetEssentialType
 };
 
 template <typename T>
+struct IsNullPtr
+{
+	static constexpr bool value = std::is_same<T, std::nullptr_t>::value;
+};
+
+template <typename T>
 struct HasTypeOnChangingCallback
 {
 	template <typename C> static std::true_type test(typename C::OnChangingCallback *) ;
