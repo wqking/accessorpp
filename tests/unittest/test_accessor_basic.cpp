@@ -217,7 +217,7 @@ TEST_CASE("Accessor, int, NoStorage, variable")
 TEST_CASE("Accessor, int, NoStorage, member")
 {
 	MyValue myValue;
-	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue);
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue, &MyValue::value, &myValue);
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;
@@ -332,4 +332,12 @@ TEST_CASE("Accessor, callback, CallbackData")
 	REQUIRE(changingValue.context == "Hello");
 	REQUIRE(changedValue.newValue == 8);
 	REQUIRE(changedValue.oldValue == 0);
+}
+
+TEST_CASE("Accessor, read only")
+{
+	using Accessor = accessorpp::Accessor<int>;
+	Accessor accessor(nullptr);
+	REQUIRE(accessor.isReadOnly());
+	CHECK_THROWS(accessor = 5);
 }

@@ -14,8 +14,10 @@
 #ifndef ACCESSOR_I_H_578722158669
 #define ACCESSOR_I_H_578722158669
 
-namespace accessorpp {
+#include <cstddef>
+#include <stdexcept>
 
+namespace accessorpp {
 
 namespace internal_ {
 
@@ -171,30 +173,185 @@ class OnChangedCallback <void, CallbackDataType> : public DummyChangeCallback
 {
 };
 
-template <typename Type, bool>
-class AccessorStorage;
-
 template <typename Type>
-class AccessorStorage <Type, true>
+class AccessorStorageBase
 {
 public:
 	using GetterType = Getter<Type>;
 	using SetterType = Setter<Type>;
+
+public:
+	AccessorStorageBase()
+		:
+			getter(),
+			setter(),
+			readOnly(false)
+	{
+	}
+
+	AccessorStorageBase(const AccessorStorageBase & other)
+		:
+			getter(other.getter),
+			setter(other.setter),
+			readOnly(other.readOnly)
+	{
+	}
+
+	AccessorStorageBase(AccessorStorageBase && other)
+		:
+			getter(std::move(other.getter)),
+			setter(std::move(other.setter)),
+			readOnly(std::move(other.readOnly))
+	{
+	}
+
+	explicit AccessorStorageBase(std::nullptr_t)
+		:
+			getter(),
+			setter(),
+			readOnly(true)
+	{
+	}
+
+	template <typename P1>
+	explicit AccessorStorageBase(P1 * p1) noexcept
+		:
+			getter(p1),
+			setter(p1),
+			readOnly(false)
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorageBase(P1 && p1, P2 && p2) noexcept
+		:
+			getter(std::forward<P1>(p1)),
+			setter(std::forward<P2>(p2)),
+			readOnly(false)
+	{
+	}
+
+	template <typename P1>
+	AccessorStorageBase(P1 && p1, std::nullptr_t) noexcept
+		:
+			getter(std::forward<P1>(p1)),
+			setter(),
+			readOnly(true)
+	{
+	}
+
+	template <typename P1, typename P2, typename P3, typename P4>
+	AccessorStorageBase(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
+		:
+			getter(std::forward<P1>(p1), std::forward<P2>(p2)),
+			setter(std::forward<P3>(p3), std::forward<P4>(p4)),
+			readOnly(false)
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorageBase(P1 && p1, P2 && p2, std::nullptr_t) noexcept
+		:
+			getter(std::forward<P1>(p1), std::forward<P2>(p2)),
+			setter(),
+			readOnly(true)
+	{
+	}
+
+	constexpr bool isReadOnly() const {
+		return readOnly;
+	}
+
+protected:
+	void doCheckWritable() const {
+		if(readOnly) {
+			throw std::logic_error("Can't set to read-only accessor.");
+		}
+	}
+
+protected:
+	GetterType getter;
+	SetterType setter;
+	const bool readOnly;
+};
+
+template <typename Type, bool>
+class AccessorStorage;
+
+template <typename Type>
+class AccessorStorage <Type, true> : public AccessorStorageBase<Type>
+{
+private:
+	using super = AccessorStorageBase<Type>;
+
+public:
 	using StorageValueType = typename std::remove_cv<typename std::remove_reference<Type>::type>::type;
 
 	AccessorStorage()
 		:
-			storedValue(),
-			getter(&AccessorStorage::storedValue, this),
-			setter(&AccessorStorage::storedValue, this)
+			super(&AccessorStorage::storedValue, this, &AccessorStorage::storedValue, this),
+			storedValue()
+	{
+	}
+
+	explicit AccessorStorage(std::nullptr_t)
+		:
+			super(&AccessorStorage::storedValue, this, nullptr),
+			storedValue()
 	{
 	}
 
 	AccessorStorage(const AccessorStorage & other)
 		:
-			storedValue(other.storedValue),
-			getter(&AccessorStorage::storedValue, this),
-			setter(&AccessorStorage::storedValue, this)
+			super(&AccessorStorage::storedValue, this, &AccessorStorage::storedValue, this),
+			storedValue(other.storedValue)
+	{
+	}
+
+	AccessorStorage(AccessorStorage && other)
+		:
+			super(static_cast<super &&>(other)),
+			storedValue(std::move(other.storedValue))
+	{
+	}
+
+	template <typename P1>
+	explicit AccessorStorage(P1 * p1) noexcept
+		:
+			super(p1),
+			storedValue()
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2) noexcept
+		:
+			super(std::forward<P1>(p1), std::forward<P2>(p2)),
+			storedValue()
+	{
+	}
+
+	template <typename P1>
+	AccessorStorage(P1 && p1, std::nullptr_t) noexcept
+		:
+			super(std::forward<P1>(p1), nullptr),
+			storedValue()
+	{
+	}
+
+	template <typename P1, typename P2, typename P3, typename P4>
+	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
+		:
+			super(std::forward<P1>(p1), std::forward<P2>(p2), std::forward<P3>(p3), std::forward<P4>(p4)),
+			storedValue()
+	{
+	}
+
+	template <typename P1, typename P2>
+	AccessorStorage(P1 && p1, P2 && p2, std::nullptr_t) noexcept
+		:
+			super(std::forward<P1>(p1), std::forward<P2>(p2), nullptr),
+			storedValue()
 	{
 	}
 
@@ -204,62 +361,23 @@ public:
 		return storedValue;
 	}
 
+	// This doesn't respect "readOnly".
 	void setValue(const StorageValueType & newValue) {
 		storedValue = newValue;
 	}
 
-protected:
+private:
 	StorageValueType storedValue;
-	GetterType getter;
-	SetterType setter;
 };
 
 template <typename Type>
-class AccessorStorage <Type, false>
+class AccessorStorage <Type, false> : public AccessorStorageBase<Type>
 {
+private:
+	using super = AccessorStorageBase<Type>;
+
 public:
-	using GetterType = Getter<Type>;
-	using SetterType = Setter<Type>;
-
-	AccessorStorage()
-		: getter(), setter()
-	{
-	}
-
-	AccessorStorage(const AccessorStorage & other)
-		: getter(other.getter),	setter(other.setter)
-	{
-	}
-
-	template <typename P1>
-	explicit AccessorStorage(P1 * p1) noexcept
-		: getter(p1), setter(p1)
-	{
-	}
-
-	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<IsGetter<P1>::value && IsSetter<P2>::value, void>::type * = nullptr) noexcept
-		: getter(std::forward<P1>(p1)), setter(std::forward<P2>(p2))
-	{
-	}
-
-	template <typename P1, typename P2>
-	AccessorStorage(P1 && p1, P2 && p2,
-		typename std::enable_if<! (IsGetter<P1>::value && IsSetter<P2>::value), void>::type * = nullptr) noexcept
-		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P1>(p1), std::forward<P2>(p2))
-	{
-	}
-
-	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorStorage(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
-		: getter(std::forward<P1>(p1), std::forward<P2>(p2)), setter(std::forward<P3>(p3), std::forward<P4>(p4))
-	{
-	}
-
-protected:
-	GetterType getter;
-	SetterType setter;
+	using super::super;
 };
 
 

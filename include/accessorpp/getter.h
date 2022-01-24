@@ -62,7 +62,7 @@ public:
 	}
 
 	template <typename F, typename C>
-	explicit Getter(const F & func, C * instance,
+	explicit Getter(F func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
 		: getterFunc([func, instance]()->ValueType { return (ValueType)((instance->*func)()); })
 	{

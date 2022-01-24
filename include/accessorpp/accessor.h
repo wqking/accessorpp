@@ -89,6 +89,8 @@ public:
 	}
 
 	Accessor & set(const ValueType & value) {
+		this->doCheckWritable();
+
 		this->OnChangingCallbackType::invokeCallback(value);
 		this->setter.set(value);
 		this->OnChangedCallbackType::invokeCallback(value);
@@ -97,6 +99,8 @@ public:
 
 	template <typename CD>
 	Accessor & set(const ValueType & value, CD && callbackData) {
+		this->doCheckWritable();
+
 		this->OnChangingCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
 		this->setter.set(value);
 		this->OnChangedCallbackType::invokeCallback(value, std::forward<CD>(callbackData));
