@@ -22,8 +22,6 @@ Apache License, Version 2.0
 ## Version 0.1.0
 ![CI](https://github.com/wqking/accessorpp/workflows/CI/badge.svg)
 
-The master branch is usable and stable.  
-
 ## Source code
 
 [https://github.com/wqking/accessorpp](https://github.com/wqking/accessorpp)
@@ -32,14 +30,6 @@ The master branch is usable and stable.
 
 Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4.
 In brief, MSVC, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
-
-## C++ standard requirements
-* To Use the library  
-    * The library: C++11.  
-* To develop the library
-    * Unit tests: C++11.
-	* Tutorials: C++11.
-	* Benchmakrs: C++11.
 
 ## Quick start
 

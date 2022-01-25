@@ -27,7 +27,7 @@ class Setter
 {
 public:
 	using Type = Type_;
-	using ValueType = typename internal_::GetEssentialType<Type>::Type;
+	using ValueType = typename internal_::GetUnderlyingType<Type>::Type;
 
 public:
 	Setter()

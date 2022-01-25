@@ -14,6 +14,8 @@
 #ifndef TYPEUTIL_I_H_582750282985
 #define TYPEUTIL_I_H_582750282985
 
+#include <utility>
+
 namespace accessorpp {
 
 namespace internal_ {
@@ -33,7 +35,7 @@ struct CanInvoke
 };
 
 template <typename T>
-struct GetEssentialType
+struct GetUnderlyingType
 {
 	using Type = typename std::remove_cv<typename std::remove_reference<T>::type>::type;
 };
