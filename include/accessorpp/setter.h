@@ -27,7 +27,7 @@ class Setter
 {
 public:
 	using Type = Type_;
-	using ValueType = typename internal_::GetUnderlyingType<Type>::Type;
+	using ValueType = typename private_::GetUnderlyingType<Type>::Type;
 
 public:
 	Setter()
@@ -51,7 +51,7 @@ public:
 
 	template <typename F>
 	explicit Setter(F func,
-		typename std::enable_if<internal_::CanInvoke<F, ValueType>::value>::type * = nullptr) noexcept
+		typename std::enable_if<private_::CanInvoke<F, ValueType>::value>::type * = nullptr) noexcept
 		: setterFunc([func](const ValueType & value) { func(value); })
 	{
 	}

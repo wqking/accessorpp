@@ -18,7 +18,7 @@
 
 namespace accessorpp {
 
-namespace internal_ {
+namespace private_ {
 
 template <typename F, typename ...Args>
 struct CanInvoke
@@ -74,18 +74,18 @@ template <typename T, bool> struct SelectCallbackData { using Type = typename T:
 template <typename T> struct SelectCallbackData <T, false> { using Type = void; };
 
 template <typename T>
-struct HasFieldHoldValue
+struct HasTypeStorage
 {
-	template <typename C> static std::true_type test(decltype(C::holdValue) *) ;
+	template <typename C> static std::true_type test(typename C::Storage *) ;
 	template <typename C> static std::false_type test(...);    
 
 	enum { value = !! decltype(test<T>(0))() };
 };
-template <typename T, bool> struct SelectHoldValue { static constexpr bool value = T::holdValue; };
-template <typename T> struct SelectHoldValue <T, false> { static constexpr bool value = true; };
+template <typename T, bool, typename Default> struct SelectStorage { using Type = typename T::Storage; };
+template <typename T, typename Default> struct SelectStorage <T, false, Default> { using Type = Default; };
 
 
-} // namespace internal_
+} // namespace private_
 
 } // namespace accessorpp
 

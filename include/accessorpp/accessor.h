@@ -35,6 +35,9 @@ constexpr DefaultGetter defaultGetter;
 constexpr DefaultSetter defaultSetter;
 constexpr NoSetter noSetter;
 
+struct Internal {};
+struct External {};
+
 #include "accessorpp/internal/accessor_i.h"
 
 template <
@@ -42,29 +45,29 @@ template <
 	typename PoliciesType = DefaultPolicies
 >
 class Accessor :
-	public internal_::AccessorBase<
-			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
+	public private_::AccessorBase<
+			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type
 		>,
-	public internal_::OnChangingCallback<
-			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
-			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
+	public private_::OnChangingCallback<
+			typename private_::SelectOnChangingCallback<PoliciesType, private_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
+			typename private_::SelectCallbackData<PoliciesType, private_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>,
-	public internal_::OnChangedCallback<
-			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
-			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
+	public private_::OnChangedCallback<
+			typename private_::SelectOnChangedCallback<PoliciesType, private_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
+			typename private_::SelectCallbackData<PoliciesType, private_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>
 {
 private:
-	using BaseType = internal_::AccessorBase<
-			Type, internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value
+	using BaseType = private_::AccessorBase<
+			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type
 		>;
-	using OnChangingCallbackType = internal_::OnChangingCallback<
-			typename internal_::SelectOnChangingCallback<PoliciesType, internal_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
-			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
+	using OnChangingCallbackType = private_::OnChangingCallback<
+			typename private_::SelectOnChangingCallback<PoliciesType, private_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
+			typename private_::SelectCallbackData<PoliciesType, private_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>;
-	using OnChangedCallbackType = internal_::OnChangedCallback<
-			typename internal_::SelectOnChangedCallback<PoliciesType, internal_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
-			typename internal_::SelectCallbackData<PoliciesType, internal_::HasTypeCallbackData<PoliciesType>::value>::Type
+	using OnChangedCallbackType = private_::OnChangedCallback<
+			typename private_::SelectOnChangedCallback<PoliciesType, private_::HasTypeOnChangedCallback<PoliciesType>::value>::Type,
+			typename private_::SelectCallbackData<PoliciesType, private_::HasTypeCallbackData<PoliciesType>::value>::Type
 		>;
 
 public:
@@ -72,7 +75,9 @@ public:
 	using GetterType = typename BaseType::GetterType;
 	using SetterType = typename BaseType::SetterType;
 
-	static constexpr bool useStorage = internal_::SelectHoldValue<PoliciesType, internal_::HasFieldHoldValue<PoliciesType>::value>::value;
+	static constexpr bool internalStorage = std::is_same<
+		typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type,
+		Internal>::value;
 
 public:
 	Accessor() noexcept
@@ -198,7 +203,7 @@ auto operator ++ (T & a)
 
 template <typename T>
 auto operator ++ (T & a, int)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result;
 	result = a;
@@ -216,7 +221,7 @@ auto operator -- (T & a)
 
 template <typename T>
 auto operator -- (T & a, int)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result;
 	result = a;
@@ -226,7 +231,7 @@ auto operator -- (T & a, int)
 
 template <typename T>
 auto operator ! (const T & a)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result;
 	result = a;
@@ -236,7 +241,7 @@ auto operator ! (const T & a)
 
 template <typename T>
 auto operator + (T & a)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result;
 	result = a;
@@ -246,7 +251,7 @@ auto operator + (T & a)
 
 template <typename T>
 auto operator - (T & a)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result;
 	result = a;
@@ -323,7 +328,7 @@ auto operator || (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator + (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) + (typename AccessorValueType<U>::Type)(b);
@@ -332,7 +337,7 @@ auto operator + (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator - (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) - (typename AccessorValueType<U>::Type)(b);
@@ -341,7 +346,7 @@ auto operator - (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator * (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) * (typename AccessorValueType<U>::Type)(b);
@@ -350,7 +355,7 @@ auto operator * (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator / (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) / (typename AccessorValueType<U>::Type)(b);
@@ -359,7 +364,7 @@ auto operator / (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator % (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) % (typename AccessorValueType<U>::Type)(b);
@@ -368,7 +373,7 @@ auto operator % (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator & (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) & (typename AccessorValueType<U>::Type)(b);
@@ -377,7 +382,7 @@ auto operator & (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator | (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) | (typename AccessorValueType<U>::Type)(b);
@@ -386,7 +391,7 @@ auto operator | (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator ^ (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) ^ (typename AccessorValueType<U>::Type)(b);
@@ -395,7 +400,7 @@ auto operator ^ (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator << (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) << (typename AccessorValueType<U>::Type)(b);
@@ -404,7 +409,7 @@ auto operator << (const T & a, const U & b)
 
 template <typename T, typename U>
 auto operator >> (const T & a, const U & b)
-	-> typename std::enable_if<IsAccessor<T>::value && T::useStorage, T>::type
+	-> typename std::enable_if<IsAccessor<T>::value && T::internalStorage, T>::type
 {
 	T result(a);
 	result = (typename AccessorValueType<T>::Type)(a) >> (typename AccessorValueType<U>::Type)(b);

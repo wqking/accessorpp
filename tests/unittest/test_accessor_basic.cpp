@@ -198,13 +198,15 @@ TEST_CASE("Accessor, int, default storage, variable, customized getter/setter")
 
 struct NoStoragePolicies
 {
-	static constexpr bool holdValue = false;
+	using Storage = accessorpp::External;
 };
 
 TEST_CASE("Accessor, int, NoStorage, variable")
 {
 	int value{};
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value, &value);
+	REQUIRE(! accessorpp::Accessor<int, NoStoragePolicies>::internalStorage);
+
 	REQUIRE(accessor.get() == 0);
 
 	accessor = 3;

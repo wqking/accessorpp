@@ -14,7 +14,7 @@
 #ifndef ACCESSOR_I_H_578722158669
 #define ACCESSOR_I_H_578722158669
 
-namespace internal_ {
+namespace private_ {
 
 template <typename CallbackType>
 struct ChangeCallbackBase
@@ -244,11 +244,11 @@ protected:
 	const bool readOnly;
 };
 
-template <typename Type_, bool>
+template <typename Type_, typename Storage>
 class AccessorBase;
 
 template <typename Type_>
-class AccessorBase <Type_, true> : public AccessorRoot<Type_>
+class AccessorBase <Type_, Internal> : public AccessorRoot<Type_>
 {
 private:
 	using super = AccessorRoot<Type_>;
@@ -340,7 +340,7 @@ private:
 };
 
 template <typename Type_>
-class AccessorBase <Type_, false> : public AccessorRoot<Type_>
+class AccessorBase <Type_, External> : public AccessorRoot<Type_>
 {
 private:
 	using super = AccessorRoot<Type_>;
@@ -354,7 +354,7 @@ public:
 };
 
 
-} // namespace internal_
+} // namespace private_
 
 
 
