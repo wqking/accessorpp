@@ -3,6 +3,7 @@ set(TARGET_TUTORIAL tutorial)
 set(SRC_TUTORIAL
 	tutorialmain.cpp
 	tutorial_accessor.cpp
+	tutorial_view_model_binding.cpp
 )
 
 add_executable(

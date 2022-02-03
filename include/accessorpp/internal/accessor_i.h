@@ -92,6 +92,14 @@ protected:
 		doInvokeCallback<ValueType, CallbackType>(newValue);
 	}
 
+	template <typename ValueType, typename Data>
+	void invokeCallback(
+			const ValueType & newValue,
+			Data &&
+		) {
+		doInvokeCallback<ValueType, CallbackType>(newValue);
+	}
+
 private:
 	template <typename ValueType, typename C>
 	auto doInvokeCallback(
@@ -117,6 +125,11 @@ class DummyChangeCallback
 protected:
 	template <typename ValueType>
 	void invokeCallback(const ValueType & /*newValue*/)
+	{
+	}
+
+	template <typename ValueType, typename Data>
+	void invokeCallback(const ValueType & /*newValue*/, Data &&)
 	{
 	}
 
@@ -176,7 +189,7 @@ protected:
 	using SetterType = Setter<Type_>;
 
 public:
-	AccessorRoot()
+	AccessorRoot() noexcept
 		:
 			getter(),
 			setter(),
@@ -184,7 +197,7 @@ public:
 	{
 	}
 
-	AccessorRoot(const AccessorRoot & other)
+	AccessorRoot(const AccessorRoot & other) noexcept
 		:
 			getter(other.getter),
 			setter(other.setter),
@@ -192,7 +205,7 @@ public:
 	{
 	}
 
-	AccessorRoot(AccessorRoot && other)
+	AccessorRoot(AccessorRoot && other) noexcept
 		:
 			getter(std::move(other.getter)),
 			setter(std::move(other.setter)),
@@ -200,29 +213,32 @@ public:
 	{
 	}
 
-	template <typename P1, typename P2>
-	AccessorRoot(P1 && p1, P2 && p2) noexcept
+	template <typename G, typename S>
+	AccessorRoot(G && getter, S && setter) noexcept
 		:
-			getter(std::forward<P1>(p1)),
-			setter(std::forward<P2>(p2)),
+			getter(std::forward<G>(getter)),
+			setter(std::forward<S>(setter)),
 			readOnly(false)
 	{
 	}
 
-	template <typename P1>
-	AccessorRoot(P1 && p1, NoSetter) noexcept
+	template <typename G>
+	AccessorRoot(G && getter, NoSetter) noexcept
 		:
-			getter(std::forward<P1>(p1)),
+			getter(std::forward<G>(getter)),
 			setter(),
 			readOnly(true)
 	{
 	}
 
-	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorRoot(P1 && p1, P2 && p2, P3 && p3, P4 && p4) noexcept
+	template <typename G, typename IG, typename S, typename IS>
+	AccessorRoot(
+			G && getter, IG && getterInstance,
+			S && setter, IS && setterInstance
+		) noexcept
 		:
-			getter(std::forward<P1>(p1), std::forward<P2>(p2)),
-			setter(std::forward<P3>(p3), std::forward<P4>(p4)),
+			getter(std::forward<G>(getter), std::forward<IG>(getterInstance)),
+			setter(std::forward<S>(setter), std::forward<IS>(setterInstance)),
 			readOnly(false)
 	{
 	}
@@ -248,7 +264,7 @@ template <typename Type_, typename Storage>
 class AccessorBase;
 
 template <typename Type_>
-class AccessorBase <Type_, Internal> : public AccessorRoot<Type_>
+class AccessorBase <Type_, InternalStorage> : public AccessorRoot<Type_>
 {
 private:
 	using super = AccessorRoot<Type_>;
@@ -259,49 +275,49 @@ public:
 	using SetterType = typename super::SetterType;
 
 public:
-	AccessorBase(const ValueType & newValue = ValueType())
+	AccessorBase(const ValueType & newValue = ValueType()) noexcept
 		:
 			super(&AccessorBase::value, this, &AccessorBase::value, this),
 			value(newValue)
 	{
 	}
 
-	AccessorBase(const AccessorBase & other)
+	AccessorBase(const AccessorBase & other) noexcept
 		:
 			super(&AccessorBase::value, this, &AccessorBase::value, this),
 			value(other.value)
 	{
 	}
 
-	AccessorBase(AccessorBase && other)
+	AccessorBase(AccessorBase && other) noexcept
 		:
 			super(static_cast<super &&>(other)),
 			value(std::move(other.value))
 	{
 	}
 
-	template <typename P1, typename P2>
-	AccessorBase(P1 && p1, P2 && p2, const ValueType & newValue = ValueType()) noexcept
+	template <typename G, typename S>
+	AccessorBase(G && getter, S && setter, const ValueType & newValue = ValueType()) noexcept
 		:
-			super(std::forward<P1>(p1),
-				std::forward<P2>(p2)),
+			super(std::forward<G>(getter),
+				std::forward<S>(setter)),
 			value(newValue)
 	{
 	}
 
-	template <typename P2>
-	AccessorBase(DefaultGetter, P2 && p2, const ValueType & newValue = ValueType()) noexcept
+	template <typename S>
+	AccessorBase(DefaultGetter, S && setter, const ValueType & newValue = ValueType()) noexcept
 		:
 			super(GetterType(&AccessorBase::value, this),
-				std::forward<P2>(p2)),
+				std::forward<S>(setter)),
 			value(newValue)
 	{
 	}
 
-	template <typename P1>
-	AccessorBase(P1 && p1, DefaultSetter, const ValueType & newValue = ValueType()) noexcept
+	template <typename G>
+	AccessorBase(G && getter, DefaultSetter, const ValueType & newValue = ValueType()) noexcept
 		:
-			super(GetterType(std::forward<P1>(p1)),
+			super(GetterType(std::forward<G>(getter)),
 				SetterType(&AccessorBase::value, this)),
 			value(newValue)
 	{
@@ -315,18 +331,26 @@ public:
 	{
 	}
 
-	template <typename P1, typename P2, typename P3, typename P4>
-	AccessorBase(P1 && p1, P2 && p2, P3 && p3, P4 && p4, const ValueType & newValue = ValueType()) noexcept
+	template <typename G, typename IG, typename S, typename IS>
+	AccessorBase(
+			G && getter, IG && getterInstance,
+			S && setter, IS && setterInstance,
+			const ValueType & newValue = ValueType()
+		) noexcept
 		:
-			super(std::forward<P1>(p1), std::forward<P2>(p2),
-				std::forward<P3>(p3), std::forward<P4>(p4)),
+			super(std::forward<G>(getter), std::forward<IG>(getterInstance),
+				std::forward<S>(setter), std::forward<IS>(setterInstance)),
 			value(newValue)
 	{
 	}
 
 	// The functions directGet and directSet should be used to implement getter/setter,
-	// don't use them to access the value directly outside of getter/setter.
+	// They don't respect "readOnly", and don't trigger any events.
 	const ValueType & directGet() const {
+		return value;
+	}
+
+	ValueType & directGet() {
 		return value;
 	}
 
@@ -340,7 +364,7 @@ private:
 };
 
 template <typename Type_>
-class AccessorBase <Type_, External> : public AccessorRoot<Type_>
+class AccessorBase <Type_, ExternalStorage> : public AccessorRoot<Type_>
 {
 private:
 	using super = AccessorRoot<Type_>;

@@ -198,10 +198,10 @@ TEST_CASE("Accessor, int, default storage, variable, customized getter/setter")
 
 struct NoStoragePolicies
 {
-	using Storage = accessorpp::External;
+	using Storage = accessorpp::ExternalStorage;
 };
 
-TEST_CASE("Accessor, int, NoStorage, variable")
+TEST_CASE("Accessor, int, ExternalStorage, variable")
 {
 	int value{};
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value, &value);
@@ -216,7 +216,7 @@ TEST_CASE("Accessor, int, NoStorage, variable")
 	REQUIRE(accessor.get() == 8);
 }
 
-TEST_CASE("Accessor, int, NoStorage, member")
+TEST_CASE("Accessor, int, ExternalStorage, member")
 {
 	MyValue myValue;
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue, &MyValue::value, &myValue);
@@ -229,7 +229,7 @@ TEST_CASE("Accessor, int, NoStorage, member")
 	REQUIRE(accessor.get() == 8);
 }
 
-TEST_CASE("Accessor, int, NoStorage, member getValue() setValue()")
+TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue()")
 {
 	MyValue myValue;
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::getValue, &myValue, &MyValue::setValue, &myValue);
@@ -369,4 +369,27 @@ TEST_CASE("Accessor, default storage, read only")
 		accessor = 5;
 		REQUIRE(accessor == 5);
 	}
+}
+
+TEST_CASE("temp")
+{
+accessorpp::Accessor<int> accessor(
+	// This is the getter
+	[&accessor]() {
+		return accessor.directGet();
+	},
+	// This is the setter, it limits the value not exceeding 5.
+	[&accessor](int value) {
+		if(value > 5) {
+			value = 5;
+		}
+		accessor.directSet(value);  
+	}
+);
+accessor = 3;
+// output 3
+std::cout << (int)accessor << std::endl;
+accessor = 6;
+// output 5
+std::cout << (int)accessor << std::endl;
 }

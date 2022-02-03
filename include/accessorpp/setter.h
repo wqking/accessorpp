@@ -43,7 +43,7 @@ public:
 	}
 
 	template <typename U, typename C>
-	explicit Setter(U C::* address, C * instance,
+	Setter(U C::* address, C * instance,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
 		: setterFunc([address, instance](const ValueType & value) { instance->*address = (U)(value); })
 	{
@@ -57,7 +57,7 @@ public:
 	}
 
 	template <typename F, typename C>
-	explicit Setter(F func, C * instance,
+	Setter(F func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
 		: setterFunc([func, instance](const ValueType & value) { (instance->*func)(value); })
 	{

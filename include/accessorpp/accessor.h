@@ -25,18 +25,22 @@
 
 namespace accessorpp {
 
-struct DefaultPolicies {};
+namespace private_ {
 
 struct DefaultGetter {};
 struct DefaultSetter {};
 struct NoSetter {};
 
-constexpr DefaultGetter defaultGetter;
-constexpr DefaultSetter defaultSetter;
-constexpr NoSetter noSetter;
+} // namespace private_
 
-struct Internal {};
-struct External {};
+struct DefaultPolicies {};
+
+constexpr private_::DefaultGetter defaultGetter;
+constexpr private_::DefaultSetter defaultSetter;
+constexpr private_::NoSetter noSetter;
+
+struct InternalStorage {};
+struct ExternalStorage {};
 
 #include "accessorpp/internal/accessor_i.h"
 
@@ -46,7 +50,7 @@ template <
 >
 class Accessor :
 	public private_::AccessorBase<
-			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type
+			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, InternalStorage>::Type
 		>,
 	public private_::OnChangingCallback<
 			typename private_::SelectOnChangingCallback<PoliciesType, private_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
@@ -59,7 +63,7 @@ class Accessor :
 {
 private:
 	using BaseType = private_::AccessorBase<
-			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type
+			Type, typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, InternalStorage>::Type
 		>;
 	using OnChangingCallbackType = private_::OnChangingCallback<
 			typename private_::SelectOnChangingCallback<PoliciesType, private_::HasTypeOnChangingCallback<PoliciesType>::value>::Type,
@@ -76,8 +80,8 @@ public:
 	using SetterType = typename BaseType::SetterType;
 
 	static constexpr bool internalStorage = std::is_same<
-		typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, Internal>::Type,
-		Internal>::value;
+		typename private_::SelectStorage<PoliciesType, private_::HasTypeStorage<PoliciesType>::value, InternalStorage>::Type,
+		InternalStorage>::value;
 
 public:
 	Accessor() noexcept

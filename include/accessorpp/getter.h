@@ -43,7 +43,7 @@ public:
 	}
 
 	template <typename U, typename C>
-	explicit Getter(const U C::* address, const C * instance,
+	Getter(const U C::* address, const C * instance,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
 		: getterFunc([address, instance]()->Type { return (Type)(instance->*address); })
 	{
@@ -62,7 +62,7 @@ public:
 	}
 
 	template <typename F, typename C>
-	explicit Getter(F func, C * instance,
+	Getter(F func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
 		: getterFunc([func, instance]()->Type { return (Type)((instance->*func)()); })
 	{

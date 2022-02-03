@@ -6,7 +6,7 @@ accessorpp is a C++ library for implementing property and data binding.
 
 - **Powerful**
     - Support arbitrary data type as property or data binding.
-	- Support event dispatching on changing data.
+    - Support event dispatching on changing data.
     - Configurable using policies.
 - **Robust**
     - Well tested. Backed by unit tests.
@@ -28,7 +28,7 @@ Apache License, Version 2.0
 
 ## Supported compilers
 
-Tested with MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4.
+Tested with MSVC 2022, MSVC 2019, MinGW (Msys) GCC 7.2, Ubuntu GCC 5.4.
 In brief, MSVC, GCC, Clang that has well support for C++11, or released after 2019, should be able to compile the library.
 
 ## Quick start
@@ -42,3 +42,40 @@ In brief, MSVC, GCC, Clang that has well support for C++11, or released after 20
 accessorpp is header only library. Just clone the source code, then add the 'include' folder inside accessorpp to your project, then you can use the library.  
 You don't need to link to any source code.  
 
+### Using Accessor
+
+Simple usage
+
+```c++
+#include "accessorpp/accessor.h"
+accessorpp::Accessor<int> accessor;
+// output 0
+std::cout << (int)accessor << std::endl;
+accessor = 5
+// output 5
+std::cout << (int)accessor << std::endl;
+```
+
+Customized getter/setter, note the code doesn't compile in MSVC.
+
+```c++
+accessorpp::Accessor<int> accessor(
+    // This is the getter
+    [&accessor]() {
+        return accessor.directGet();
+    },
+    // This is the setter, it limits the value not exceeding 5.
+    [&accessor](int value) {
+        if(value > 5) {
+            value = 5;
+        }
+        accessor.directSet(value);  
+    }
+);
+accessor = 3;
+// output 3
+std::cout << (int)accessor << std::endl;
+accessor = 6;
+// output 5
+std::cout << (int)accessor << std::endl;
+```
