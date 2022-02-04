@@ -55,7 +55,7 @@ Example code,
 ```c++
 struct MyClass
 {
-	int value;
+    int value;
 };
 MyClass instance{ 8 };
 accessorpp::Getter<int> getter(&MyClass::value, &instance);
@@ -114,10 +114,10 @@ Example code,
 ```c++
 struct MyClass
 {
-	int getValue() const {
-		return value;
-	}
-	int value;
+    int getValue() const {
+        return value;
+    }
+    int value;
 };
 MyClass instance{ 18 };
 accessorpp::Getter<int> getter(&MyClass::getValue, &instance);

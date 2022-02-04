@@ -127,17 +127,15 @@ Note: the getter and setter should call `accessor.directGet` and `accessor.direc
 
 Example code,  
 ```c++
-// The code compiles with GCC and Clang.
-// VC++ can't compile it because it can't capture the accessor
 accessorpp::Accessor<int> accessor(
-	[&accessor]() {
-		std::cout << "Getting value" << std::endl;
-		return accessor.directGet();
-	},
-	[&accessor](const int value) {
-		std::cout << "Setting value " << value << std::endl;
-		accessor.directSet(value);
-	}
+    [&accessor]() {
+        std::cout << "Getting value" << std::endl;
+        return accessor.directGet();
+    },
+    [&accessor](const int value) {
+        std::cout << "Setting value " << value << std::endl;
+        accessor.directSet(value);
+    }
 );
 const int value = accessor;
 accessor = value + 1;
@@ -147,10 +145,10 @@ accessor = value + 1;
 ```c++
 template <typename G, typename IG, typename S, typename IS>
 Accessor(
-		G && getter, IG && getterInstance,
-		S && setter, IS && setterInstance,
-		const ValueType & newValue = ValueType()
-	) noexcept;
+        G && getter, IG && getterInstance,
+        S && setter, IS && setterInstance,
+        const ValueType & newValue = ValueType()
+    ) noexcept;
 ```
 
 `newValue` is the initial value.  
@@ -161,16 +159,16 @@ Example code,
 ```c++
 struct MyClass
 {
-	void setValue(const int newValue) {
-		std::cout << "Setting value " << newValue << std::endl;
-		value = newValue;
-	}
-	int value;
+    void setValue(const int newValue) {
+        std::cout << "Setting value " << newValue << std::endl;
+        value = newValue;
+    }
+    int value;
 };
 MyClass instance { 5 };
 accessorpp::Accessor<int> accessor(
-	&MyClass::value, &instance, 
-	&MyClass::setValue, &instance
+    &MyClass::value, &instance, 
+    &MyClass::setValue, &instance
 );
 accessor = instance.value + 1;
 ```
@@ -178,8 +176,8 @@ accessor = instance.value + 1;
 Above constructor equals to,  
 ```c++
 accessorpp::Accessor<int> accessor(
-	accessorpp::Getter<int>(&MyClass::value, &instance),
-	accessorpp::Setter<int>(&MyClass::setValue, &instance)
+    accessorpp::Getter<int>(&MyClass::value, &instance),
+    accessorpp::Setter<int>(&MyClass::setValue, &instance)
 );
 ```
 
@@ -228,9 +226,9 @@ template <typename G, typename S>
 Accessor(G && getter, S && setter) noexcept;
 template <typename G, typename IG, typename S, typename IS>
 Accessor(
-		G && getter, IG && getterInstance,
-		S && setter, IS && setterInstance
-	) noexcept;
+        G && getter, IG && getterInstance,
+        S && setter, IS && setterInstance
+    ) noexcept;
 Accessor(const Accessor & other) noexcept;
 Accessor(Accessor && other) noexcept;
 constexpr bool isReadOnly() const;

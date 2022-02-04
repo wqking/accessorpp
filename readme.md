@@ -79,3 +79,9 @@ accessor = 6;
 // output 5
 std::cout << (int)accessor << std::endl;
 ```
+
+## Documentations
+
+* [Accessor](doc/accessor.md)
+* [Getter](doc/getter.md)
+* [Setter](doc/setter.md)

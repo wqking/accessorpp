@@ -49,11 +49,10 @@ TEST_CASE("Accessor tutorial 2, customized getter/setter")
 {
 	std::cout << std::endl << "Accessor tutorial 2, customized getter/setter" << std::endl;
 
-#if ! defined(_MSC_VER)
 	{
 		// Let's create an accessor with customized getter and setter.
 		// The first argument is the getter, the second is the setter.
-		// Note: MSVC can't compile the code because it gives error "lambda capture variable not found".
+		// Note: the code requires C++20 standard in MSVC, otherwise it gives error "lambda capture variable not found".
 		// The code works with GCC and Clang.
 		accessorpp::Accessor<int> accessor(
 			// This is the getter
@@ -64,7 +63,6 @@ TEST_CASE("Accessor tutorial 2, customized getter/setter")
 		accessor = 3;
 		std::cout << "Accessor tutorial 2: the accessor is set with 3, now the value should be 6, got " << (int)accessor << std::endl;
 	}
-#endif
 
 	{
 		// Now let's create an accessor with default getter and customized setter.

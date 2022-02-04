@@ -56,7 +56,7 @@ Example code,
 ```c++
 struct MyClass
 {
-	int value;
+    int value;
 };
 MyClass instance;
 accessorpp::Setter<int> setter(&MyClass::value, &instance);
@@ -100,10 +100,10 @@ Example code,
 ```c++
 struct MyClass
 {
-	void setValue(const int newValue) {
-		value = newValue;
-	}
-	int value;
+    void setValue(const int newValue) {
+        value = newValue;
+    }
+    int value;
 };
 MyClass instance;
 accessorpp::Setter<int> setter(&MyClass::setValue, &instance);
