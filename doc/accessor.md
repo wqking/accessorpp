@@ -27,7 +27,7 @@ accessorpp uses policy based design to configure and extend Accessor behavior. T
 A policy is a type in the policies class. All policies must be public visible, so `struct` is commonly used to define the policies class.  
 All policies are optional. If any policy is omitted, the default value is used.  In fact `DefaultPolicies` is just an empty struct. 
 
-### Polity Storage
+### Policy Storage
 
 The policy `Storage` determine how the underlying data is stored. It can have two kinds of types,
 `accessorpp::InternalStorage`: store the data in the Accessor. This is the default type.  
@@ -52,7 +52,7 @@ int value = 0;
 accessorpp::Accessor<int, MyPolicies> accessor(&value, &value);
 ```
 
-### Polity OnChangingCallback and OnChangedCallback  
+### Policy OnChangingCallback and OnChangedCallback  
 
 OnChangingCallback specifies the event handler type that's called before the underlying value is changed. OnChangedCallback specifies the event handler type that's called before the underlying value is changed.  
 Ideally the `CallbackList` in [my eventpp library](https://github.com/wqking/eventpp) is perfect for such callback, otherwise `std::function` can be used.  
@@ -95,7 +95,7 @@ accessor.onChanged().append([](const std::string & newValue) {
 accessor = "Hello";
 ```
 
-### Polity CallbackData  
+### Policy CallbackData  
 
 
 ## Constructors for InternalStorage
