@@ -68,6 +68,30 @@ setter = 19;
 std::cout << instance.value << std::endl;
 ```
 
+### Construct from class member address, pass instance explicitly  
+```c++
+template <typename U>
+Setter(const U C::* address) noexcept;
+```
+
+To set the value, call `Setter::set(value, instance)` with the object instance.    
+Example code,  
+```c++
+struct MyClass
+{
+    int value;
+};
+MyClass instance;
+accessorpp::Setter<int> setter(&MyClass::value);
+// setter = 18; // can't assign directly, the setter needs an instance
+setter.set(18, &instance);
+// output 18
+std::cout << instance.value << std::endl;
+setter.set(19, &instance);
+// output 19
+std::cout << instance.value << std::endl;
+```
+
 ### Construct from function  
 ```c++
 template <typename F>
@@ -88,14 +112,14 @@ setter = 10;
 std::cout << n << std::endl;
 ```
 
-### Construct from class member function  
+### Construct from class member function, pass instance explicitly  
 ```c++
-template <typename F, typename C>
-explicit Setter(F func, C * instance) noexcept;
+template <typename F>
+explicit Setter(F func) noexcept;
 ```
 
-`func` is a member function which prototype is `void (Type)`, `instance` is the object pointer.  
-When setting to the setter, the setter invokes `instance->*func(value)`.
+`func` is a member function which prototype is `void (Type)`.  
+To set the value, call `Setter::set(value, instance)` with the object instance.    
 Example code,  
 ```c++
 struct MyClass
@@ -106,11 +130,11 @@ struct MyClass
     int value;
 };
 MyClass instance;
-accessorpp::Setter<int> setter(&MyClass::setValue, &instance);
-setter = 15;
+accessorpp::Setter<int> setter(&MyClass::setValue);
+setter.set(15, &instance);
 // output 15
 std::cout << instance.value << std::endl;
-setter = 16;
+setter.set(16, &instance);
 // output 16
 std::cout << instance.value << std::endl;
 ```
@@ -132,11 +156,12 @@ Move constructor.
 ## Member functions
 
 ```c++
-Setter & operator = (const ValueType & value);
+Setter & operator = (const ValueType & value, void * instance = nullptr);
 void set(const ValueType & value);
 ```
 
-Both sets the underlying value.
+Both sets the underlying value.  
+If the setter is a class member and instance is not passed in constructor, the `instance` in the `set` function must be a valid object instance. Otherwise, `instance` can be nullptr.
 
 ```c++
 template <typename Type>

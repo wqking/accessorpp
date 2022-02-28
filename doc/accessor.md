@@ -97,6 +97,11 @@ accessor = "Hello";
 
 ### Policy CallbackData  
 
+If `CallbackData` is not `void`, we can call `Accessor::setWithCallbackData` to set the value with a callback data, and the callback data will be passed to OnChangingCallback and OnChangedCallback, if the callback accepts the data.  
+Calling `Accessor::set` or assigning to an accessor will pass default constructed callback data.  
+The `CallbackData` is useful to pass a "context" to the on change callback. For example, assume there is a text box on a GUI window. The text box listen to accessor's on change event to update the interface, while when the text box is changed such as the user types letters, the text box will also set to the accessor with the new text, which will also trigger the on change event. Without CallbackData, the text box needs update the interface two times then the user inputs. With CallbackData, when the text box sets the accessor, it can pass the CallbackData to indicate the setting is from itself, and in it's on change listener, it can check the CallbackData to avoid redundant updating.  
+The tutorial "tutorial_view_model_binding.cpp" in the tests source code demonstrate the mechanism clearly.
+
 
 ## Constructors for InternalStorage
 
@@ -212,12 +217,6 @@ Set the internal value directly. This is used to implement customized setter.
 `directSet` doesn't respect read-only accessor, so it can set the value in a read-only accessor.  
 `directSet` doesn't trigger any onChanging/onChanged events.  
 
-```c++
-constexpr bool isReadOnly() const;
-```
-
-Return true if the accessor is read-only. Setting to a read-only accessor will throw `std::logic_error`.  
-
 ## Constructors and member functions for ExternalStorage
 
 ```c++
@@ -231,7 +230,33 @@ Accessor(
     ) noexcept;
 Accessor(const Accessor & other) noexcept;
 Accessor(Accessor && other) noexcept;
-constexpr bool isReadOnly() const;
 ```
 
 The difference between ExternalStorage and InternalStorage is, constructors for ExternalStorage don't have the argument for initial value(`newValue`).  ExternalStorage doesn't have functions `directGet` and `directSet`.  
+
+## Member functions for both InternalStorage and ExternalStorage
+
+```c++
+constexpr bool isReadOnly() const;
+```
+
+Return true if the accessor is read-only. Setting to a read-only accessor will throw `std::logic_error`.  
+
+```c++
+ValueType get(const void * instance = nullptr) const;
+operator ValueType() const;
+```
+
+Get the value. The function is same as `Getter::get`.  
+
+```c++
+Accessor & set(const ValueType & newValue, void * instance = nullptr);
+```
+
+Set the value. The function is same as `Setter::set`.  
+
+```c++
+Accessor & setWithCallbackData(const ValueType & newValue, CD && callbackData, void * instance = nullptr);
+```
+
+Set the value with CallbackData.

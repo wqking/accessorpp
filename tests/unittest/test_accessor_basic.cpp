@@ -216,7 +216,7 @@ TEST_CASE("Accessor, int, ExternalStorage, variable")
 	REQUIRE(accessor.get() == 8);
 }
 
-TEST_CASE("Accessor, int, ExternalStorage, member")
+TEST_CASE("Accessor, int, ExternalStorage, member, embed instance")
 {
 	MyValue myValue;
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue, &MyValue::value, &myValue);
@@ -229,7 +229,20 @@ TEST_CASE("Accessor, int, ExternalStorage, member")
 	REQUIRE(accessor.get() == 8);
 }
 
-TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue()")
+TEST_CASE("Accessor, int, ExternalStorage, member, pass instance")
+{
+	MyValue myValue;
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &MyValue::value);
+	REQUIRE(accessor.get(&myValue) == 0);
+
+	accessor.set(3, &myValue);
+	REQUIRE(accessor.get(&myValue) == 3);
+
+	accessor.set(8, &myValue);
+	REQUIRE(accessor.get(&myValue) == 8);
+}
+
+TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue(), embed instance")
 {
 	MyValue myValue;
 	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::getValue, &myValue, &MyValue::setValue, &myValue);
@@ -240,6 +253,19 @@ TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue()")
 
 	accessor = 8;
 	REQUIRE(accessor.get() == 8);
+}
+
+TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue(), pass instance")
+{
+	MyValue myValue;
+	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::getValue, &MyValue::setValue);
+	REQUIRE(accessor.get(&myValue) == 0);
+
+	accessor.set(3, &myValue);
+	REQUIRE(accessor.get(&myValue) == 3);
+
+	accessor.set(8, &myValue);
+	REQUIRE(accessor.get(&myValue) == 8);
 }
 
 TEST_CASE("Accessor, callback")
@@ -328,7 +354,7 @@ TEST_CASE("Accessor, callback, CallbackData")
 	REQUIRE(changedValue.newValue == 3);
 	REQUIRE(changedValue.oldValue == 0);
 
-	accessor.set(8, "Hello");
+	accessor.setWithCallbackData(8, "Hello");
 	REQUIRE(changingValue.newValue == 8);
 	REQUIRE(changingValue.oldValue == 3);
 	REQUIRE(changingValue.context == "Hello");
@@ -371,25 +397,22 @@ TEST_CASE("Accessor, default storage, read only")
 	}
 }
 
-TEST_CASE("temp")
+TEST_CASE("This is the play camp for sample code in the document")
 {
-accessorpp::Accessor<int> accessor(
-	// This is the getter
-	[&accessor]() {
-		return accessor.directGet();
-	},
-	// This is the setter, it limits the value not exceeding 5.
-	[&accessor](int value) {
-		if(value > 5) {
-			value = 5;
+	struct MyClass
+	{
+		void setValue(const int newValue) {
+			value = newValue;
 		}
-		accessor.directSet(value);  
-	}
-);
-accessor = 3;
-// output 3
-std::cout << (int)accessor << std::endl;
-accessor = 6;
-// output 5
-std::cout << (int)accessor << std::endl;
+		int value;
+	};
+	MyClass instance;
+	accessorpp::Setter<int> setter(&MyClass::setValue);
+	setter.set(15, &instance);
+	// output 15
+	std::cout << instance.value << std::endl;
+	setter.set(16, &instance);
+	// output 16
+	std::cout << instance.value << std::endl;
+
 }

@@ -66,6 +66,28 @@ instance.value = 9;
 std::cout << (int)getter << std::endl;
 ```
 
+### Construct from class member address, pass instance explicitly  
+```c++
+template <typename U>
+Getter(const U C::* address) noexcept;
+```
+
+To read the value, call `Getter::get(instance)` with the object instance.    
+Example code,  
+```c++
+struct MyClass
+{
+    int value;
+};
+MyClass instance{ 8 };
+accessorpp::Getter<int> getter(&MyClass::value);
+// output 8, can't use (int)getter here
+std::cout << getter.get(&instance) << std::endl;
+instance.value = 9;
+// output 9
+std::cout << getter.get(&instance) << std::endl;
+```
+
 ### Construct from constant data  
 ```c++
 Getter(const Type & value) noexcept;
@@ -128,6 +150,32 @@ instance.value = 19;
 std::cout << (int)getter << std::endl;
 ```
 
+### Construct from class member function, pass instance explicitly  
+```c++
+template <typename F>
+explicit Getter(F func) noexcept;
+```
+
+`func` is a member function which prototype is `Type ()`.  
+To read the value, call `Getter::get(instance)` with the object instance.    
+Example code,  
+```c++
+struct MyClass
+{
+    int getValue() const {
+        return value;
+    }
+    int value;
+};
+MyClass instance{ 18 };
+accessorpp::Getter<int> getter(&MyClass::getValue);
+// output 18
+std::cout << getter.get(&instance) << std::endl;
+instance.value = 19;
+// output 19
+std::cout << getter.get(&instance) << std::endl;
+```
+
 ### Copy constructor  
 ```c++
 Getter(const Getter & other) noexcept;
@@ -145,11 +193,12 @@ Move constructor.
 ## Member functions
 
 ```c++
-Type get() const;
+Type get(const void * instance = nullptr) const;
 operator Type() const;
 ```
 
-Both returns the underlying value.
+Both returns the underlying value.  
+If the getter is a class member and instance is not passed in constructor, the `instance` in the `get` function must be a valid object instance. Otherwise, `instance` can be nullptr.
 
 ```c++
 template <typename Type>

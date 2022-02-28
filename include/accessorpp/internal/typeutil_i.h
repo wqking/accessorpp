@@ -15,6 +15,7 @@
 #define TYPEUTIL_I_H_582750282985
 
 #include <utility>
+#include <type_traits>
 
 namespace accessorpp {
 
@@ -32,6 +33,58 @@ struct CanInvoke
 	enum {
 		value = !! decltype(invoke<F, Args...>(0))()
 	};
+};
+
+template <typename T>
+struct HelperCallableTypeChecker
+{
+	static constexpr bool isFunction = false;
+	static constexpr bool isClassMember = false;
+	using ClassType = void;
+	using ResultType = void;
+};
+
+template <typename RT, typename ...Args>
+struct HelperCallableTypeChecker <RT (*)(Args...)>
+{
+	static constexpr bool isFunction = true;
+	static constexpr bool isClassMember = false;
+	using ClassType = void;
+	using ResultType = RT;
+};
+
+template <typename RT, typename ...Args>
+struct HelperCallableTypeChecker <RT (Args...)> : HelperCallableTypeChecker <RT (*)(Args...)>
+{
+};
+
+template <typename RT, typename C, typename ...Args>
+struct HelperCallableTypeChecker <RT (C::*)(Args...)>
+{
+	static constexpr bool isFunction = true;
+	static constexpr bool isClassMember = true;
+	using ClassType = C;
+	using ResultType = RT;
+};
+
+template <typename RT, typename C, typename ...Args>
+struct HelperCallableTypeChecker <RT (C::*)(Args...) const> : HelperCallableTypeChecker <RT (C::*)(Args...)>
+{
+};
+
+template <typename RT, typename C, typename ...Args>
+struct HelperCallableTypeChecker <RT (C::*)(Args...) volatile> : HelperCallableTypeChecker <RT (C::*)(Args...)>
+{
+};
+
+template <typename RT, typename C, typename ...Args>
+struct HelperCallableTypeChecker <RT (C::*)(Args...) const volatile> : HelperCallableTypeChecker <RT (C::*)(Args...)>
+{
+};
+
+template <typename T>
+struct CallableTypeChecker : HelperCallableTypeChecker<T>
+{
 };
 
 template <typename T>

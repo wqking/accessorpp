@@ -31,40 +31,62 @@ public:
 
 public:
 	Getter()
-		: getterFunc([](){ return ValueType(); })
+		: getterFunc([](const void *){ return ValueType(); })
 	{
 	}
 
 	template <typename U>
 	explicit Getter(const U * address,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
-		: getterFunc([address]()->Type { return (Type)*address; })
+		: getterFunc([address](const void *)->Type { return (Type)*address; })
 	{
 	}
 
 	template <typename U, typename C>
 	Getter(const U C::* address, const C * instance,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
-		: getterFunc([address, instance]()->Type { return (Type)(instance->*address); })
+		: getterFunc([address, instance](const void *)->Type { return (Type)(instance->*address); })
+	{
+	}
+
+	template <typename U, typename C>
+	Getter(const U C::* address,
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
+		: getterFunc([address](const void * instance)->Type { return (Type)(static_cast<const C *>(instance)->*address); })
 	{
 	}
 
 	explicit Getter(const Type & value) noexcept
-		: getterFunc([value]()->Type { return value; })
+		: getterFunc([value](const void *)->Type { return value; })
 	{
 	}
 
 	template <typename F>
 	explicit Getter(F func,
 		typename std::enable_if<private_::CanInvoke<F>::value>::type * = nullptr) noexcept
-		: getterFunc([func]()->Type { return (Type)func(); })
+		: getterFunc([func](const void *)->Type { return (Type)func(); })
 	{
 	}
 
 	template <typename F, typename C>
 	Getter(F func, C * instance,
-		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
-		: getterFunc([func, instance]()->Type { return (Type)((instance->*func)()); })
+		typename std::enable_if<
+			private_::CallableTypeChecker<F>::isClassMember
+			&& std::is_convertible<typename private_::CallableTypeChecker<F>::ResultType, ValueType>::value
+		>::type * = nullptr) noexcept
+		: getterFunc([func, instance](const void *)->Type { return (Type)((instance->*func)()); })
+	{
+	}
+
+	template <typename F>
+	Getter(F func,
+		typename std::enable_if<
+			private_::CallableTypeChecker<F>::isClassMember
+			&& std::is_convertible<typename private_::CallableTypeChecker<F>::ResultType, ValueType>::value
+		>::type * = nullptr) noexcept
+		: getterFunc([func](const void * instance)->Type {
+			return (Type)((static_cast<const typename private_::CallableTypeChecker<F>::ClassType *>(instance)->*func)());
+		})
 	{
 	}
 
@@ -88,8 +110,8 @@ public:
 		return *this;
 	}
 
-	Type get() const {
-		return getterFunc();
+	Type get(const void * instance = nullptr) const {
+		return getterFunc(instance);
 	}
 
 	operator Type() const {
@@ -97,7 +119,7 @@ public:
 	}
 
 private:
-	std::function<Type ()> getterFunc;
+	std::function<Type (const void *)> getterFunc;
 };
 
 template <typename T>

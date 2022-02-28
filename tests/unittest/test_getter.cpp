@@ -87,10 +87,22 @@ struct MyValue
 TEST_CASE("Getter, int, member")
 {
 	MyValue myValue(9);
-	accessorpp::Getter<int> getter(&MyValue::value, &myValue);
-	REQUIRE(getter.get() == 9);
-	myValue.value = 8;
-	REQUIRE(getter.get() == 8);
+
+	SECTION("Embed instance")
+	{
+		accessorpp::Getter<int> getter(&MyValue::value, &myValue);
+		REQUIRE(getter.get() == 9);
+		myValue.value = 8;
+		REQUIRE(getter.get() == 8);
+	}
+
+	SECTION("Pass instance")
+	{
+		accessorpp::Getter<int> getter(&MyValue::value);
+		REQUIRE(getter.get(&myValue) == 9);
+		myValue.value = 8;
+		REQUIRE(getter.get(&myValue) == 8);
+	}
 }
 
 TEST_CASE("Getter, const int &, member")
@@ -114,10 +126,22 @@ TEST_CASE("Getter, int &, member")
 TEST_CASE("Getter, int, member getValue()")
 {
 	MyValue myValue(9);
-	accessorpp::Getter<int> getter(&MyValue::getValue, &myValue);
-	REQUIRE(getter.get() == 9);
-	myValue.value = 8;
-	REQUIRE(getter.get() == 8);
+	
+	SECTION("Embed instance")
+	{
+		accessorpp::Getter<int> getter(&MyValue::getValue, &myValue);
+		REQUIRE(getter.get() == 9);
+		myValue.value = 8;
+		REQUIRE(getter.get() == 8);
+	}
+	
+	SECTION("Pass instance")
+	{
+		accessorpp::Getter<int> getter(&MyValue::getValue);
+		REQUIRE(getter.get(&myValue) == 9);
+		myValue.value = 8;
+		REQUIRE(getter.get(&myValue) == 8);
+	}
 }
 
 TEST_CASE("Getter, int, member getCref()")

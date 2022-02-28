@@ -31,35 +31,51 @@ public:
 
 public:
 	Setter()
-		: setterFunc([](const ValueType &) {})
+		: setterFunc([](void *, const ValueType &) {})
 	{
 	}
 
 	template <typename U>
 	explicit Setter(U * address,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
-		: setterFunc([address](const ValueType & value) { *address = (U)(value); })
+		: setterFunc([address](void *, const ValueType & value) { *address = (U)(value); })
 	{
 	}
 
 	template <typename U, typename C>
 	Setter(U C::* address, C * instance,
 		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
-		: setterFunc([address, instance](const ValueType & value) { instance->*address = (U)(value); })
+		: setterFunc([address, instance](void *, const ValueType & value) { instance->*address = (U)(value); })
+	{
+	}
+
+	template <typename U, typename C>
+	Setter(U C::* address,
+		typename std::enable_if<std::is_convertible<U, ValueType>::value>::type * = nullptr) noexcept
+		: setterFunc([address](void * instance, const ValueType & value) { static_cast<C *>(instance)->*address = (U)(value); })
 	{
 	}
 
 	template <typename F>
 	explicit Setter(F func,
 		typename std::enable_if<private_::CanInvoke<F, ValueType>::value>::type * = nullptr) noexcept
-		: setterFunc([func](const ValueType & value) { func(value); })
+		: setterFunc([func](void *, const ValueType & value) { func(value); })
 	{
 	}
 
 	template <typename F, typename C>
 	Setter(F func, C * instance,
 		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
-		: setterFunc([func, instance](const ValueType & value) { (instance->*func)(value); })
+		: setterFunc([func, instance](void *, const ValueType & value) { (instance->*func)(value); })
+	{
+	}
+
+	template <typename F>
+	Setter(F func,
+		typename std::enable_if<std::is_member_function_pointer<F>::value>::type * = nullptr) noexcept
+		: setterFunc([func](void * instance, const ValueType & value) {
+			(static_cast<typename private_::CallableTypeChecker<F>::ClassType *>(instance)->*func)(value);
+		})
 	{
 	}
 
@@ -88,12 +104,12 @@ public:
 		return *this;
 	}
 
-	void set(const ValueType & value) {
-		setterFunc(value);
+	void set(const ValueType & value, void * instance = nullptr) {
+		setterFunc(instance, value);
 	}
 
 private:
-	std::function<void (const ValueType &)> setterFunc;
+	std::function<void (void *, const ValueType &)> setterFunc;
 };
 
 template <typename T>

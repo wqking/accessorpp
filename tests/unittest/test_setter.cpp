@@ -81,9 +81,20 @@ TEST_CASE("Setter, int, member")
 {
 	MyValue myValue(0);
 	REQUIRE(myValue.getValue() == 0);
-	accessorpp::Setter<int> setter(&MyValue::value, &myValue);
-	setter = 8;
-	REQUIRE(myValue.getValue() == 8);
+
+	SECTION("Embed instance")
+	{
+		accessorpp::Setter<int> setter(&MyValue::value, &myValue);
+		setter = 8;
+		REQUIRE(myValue.getValue() == 8);
+	}
+
+	SECTION("Pass instance")
+	{
+		accessorpp::Setter<int> setter(&MyValue::value);
+		setter.set(8, &myValue);
+		REQUIRE(myValue.getValue() == 8);
+	}
 }
 
 TEST_CASE("Setter, const int &, member")
@@ -112,9 +123,20 @@ TEST_CASE("Setter, int, member setValue")
 {
 	MyValue myValue(0);
 	REQUIRE(myValue.getValue() == 0);
-	accessorpp::Setter<int> setter(&MyValue::setValue, &myValue);
-	setter = 8;
-	REQUIRE(myValue.getValue() == 8);
+	
+	SECTION("Embed instance")
+	{
+		accessorpp::Setter<int> setter(&MyValue::setValue, &myValue);
+		setter = 8;
+		REQUIRE(myValue.getValue() == 8);
+	}
+	
+	SECTION("Pass instance")
+	{
+		accessorpp::Setter<int> setter(&MyValue::setValue);
+		setter.set(8, &myValue);
+		REQUIRE(myValue.getValue() == 8);
+	}
 }
 
 TEST_CASE("Setter, const int &, member setValue")

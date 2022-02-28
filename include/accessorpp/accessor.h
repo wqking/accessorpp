@@ -106,27 +106,27 @@ public:
 		return this->set(newValue);
 	}
 
-	Accessor & set(const ValueType & newValue) {
+	Accessor & set(const ValueType & newValue, void * instance = nullptr) {
 		this->doCheckWritable();
 
 		this->OnChangingCallbackType::invokeCallback(newValue);
-		this->setter.set(newValue);
+		this->setter.set(newValue, instance);
 		this->OnChangedCallbackType::invokeCallback(newValue);
 		return *this;
 	}
 
 	template <typename CD>
-	Accessor & set(const ValueType & newValue, CD && callbackData) {
+	Accessor & setWithCallbackData(const ValueType & newValue, CD && callbackData, void * instance = nullptr) {
 		this->doCheckWritable();
 
 		this->OnChangingCallbackType::invokeCallback(newValue, std::forward<CD>(callbackData));
-		this->setter.set(newValue);
+		this->setter.set(newValue, instance);
 		this->OnChangedCallbackType::invokeCallback(newValue, std::forward<CD>(callbackData));
 		return *this;
 	}
 
-	ValueType get() const {
-		return this->getter.get();
+	ValueType get(const void * instance = nullptr) const {
+		return this->getter.get(instance);
 	}
 
 	operator ValueType() const {
