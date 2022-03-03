@@ -51,7 +51,7 @@ Simple usage
 accessorpp::Accessor<int> accessor;
 // output 0
 std::cout << (int)accessor << std::endl;
-accessor = 5
+accessor = 5;
 // output 5
 std::cout << (int)accessor << std::endl;
 ```
