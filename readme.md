@@ -52,8 +52,9 @@ accessorpp::Accessor<int> accessor;
 // output 0
 std::cout << (int)accessor << std::endl;
 accessor = 5;
-// output 5
-std::cout << (int)accessor << std::endl;
+// output 5, we don't need to cast to int explicitly
+// Accessor does the casting for stream operators automatically.
+std::cout << accessor << std::endl;
 ```
 
 Customized getter/setter

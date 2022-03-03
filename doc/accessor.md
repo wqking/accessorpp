@@ -265,6 +265,14 @@ Accessor & setWithCallbackData(const ValueType & newValue, CD && callbackData, v
 
 Set the value with CallbackData.
 
+```c++
+std::ostream & operator << (std::ostream & stream, const Accessor & accessor);
+std::istream & operator >> (std::istream & stream, Accessor & accessor);
+```
+
+Input/output stream operator are overload. Accessor uses the underlying value with the stream.
+
+
 The `instance` argument in above get/set/setWithCallbackData functions are used to pass the object instance explicity, if the underlying getter/setter is constructed with member data or member function and doesn't bind to an instance. In such case, the `instance` must be passed in explicitly, otherwise, the get/set/setWithCallbackData function will crash as if accessing an object of nullptr.  
 
 ```c++
