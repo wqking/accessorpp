@@ -56,7 +56,7 @@ accessor = 5
 std::cout << (int)accessor << std::endl;
 ```
 
-Customized getter/setter, note the code doesn't compile in MSVC.
+Customized getter/setter
 
 ```c++
 accessorpp::Accessor<int> accessor(
