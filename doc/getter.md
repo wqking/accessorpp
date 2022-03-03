@@ -97,7 +97,7 @@ When reading from the getter, the getter always returns 'value', that's to say, 
 Example code,  
 ```c++
 int n = 9;
-// note n is passed by value;
+// note n is passed by value
 accessorpp::Getter<int> getter(n);
 // output 9
 std::cout << (int)getter << std::endl;

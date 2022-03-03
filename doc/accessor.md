@@ -29,9 +29,9 @@ All policies are optional. If any policy is omitted, the default value is used. 
 
 ### Policy Storage
 
-The policy `Storage` determine how the underlying data is stored. It can have two kinds of types,
+The policy `Storage` determines how the underlying data is stored. It can have two kinds of types,
 `accessorpp::InternalStorage`: store the data in the Accessor. This is the default type.  
-`accessorpp::ExternalStorage': the Accessor doesn't hold the data, how the data is accessed depending on the getter and setter in the Accessor.  
+`accessorpp::ExternalStorage`: the Accessor doesn't hold the data, how the data is accessed depending on the getter and setter in the Accessor.  
 InternalStorage and ExternalStorage defines different constructors and member functions in Accessor. You may treat them as different Accessor classes.
 
 Example code,  
@@ -99,7 +99,7 @@ accessor = "Hello";
 
 If `CallbackData` is not `void`, we can call `Accessor::setWithCallbackData` to set the value with a callback data, and the callback data will be passed to OnChangingCallback and OnChangedCallback, if the callback accepts the data.  
 Calling `Accessor::set` or assigning to an accessor will pass default constructed callback data.  
-The `CallbackData` is useful to pass a "context" to the on change callback. For example, assume there is a text box on a GUI window. The text box listen to accessor's on change event to update the interface, while when the text box is changed such as the user types letters, the text box will also set to the accessor with the new text, which will also trigger the on change event. Without CallbackData, the text box needs update the interface two times then the user inputs. With CallbackData, when the text box sets the accessor, it can pass the CallbackData to indicate the setting is from itself, and in it's on change listener, it can check the CallbackData to avoid redundant updating.  
+The `CallbackData` is useful to pass a "context" to the on change callback. For example, assume there is a text box on a GUI window. The text box listens to accessor's on change event to update the interface, while when the text box is changed such as the user types letters, the text box will also set to the accessor with the new text, which will also trigger the on change event. Without CallbackData, the text box needs update the interface two times when the user inputs, one is when the user typing, the other one is when the on change event is triggered by the text box. With CallbackData, when the text box sets the accessor, it can pass the CallbackData to indicate the setting is from itself, and in it's on change listener, it can check the CallbackData to avoid redundant updating.  
 The tutorial "tutorial_view_model_binding.cpp" in the tests source code demonstrate the mechanism clearly.
 
 
@@ -128,7 +128,9 @@ The argument `getter` and `setter` are used to construct underlying `accessorpp:
 `setter` can be `accessor::DefaultSetter`, means the default setter is used.  
 `setter` can be `accessor::NoSetter`, means there no setter used, so the accessor is read only. Setting to an accessor which setter is `NoSetter` will throw exception.  
 
-Note: the getter and setter should call `accessor.directGet` and `accessor.directSet` to access the internal value in the accessor. It's possible that the getter and setter gets and sets external value, then the internal storage of the value is wasted.  
+It's possible that the getter and setter gets and sets external value, then the internal storage of the value is wasted. In such case, `accessorpp::ExternalStorage` should be used.  
+
+Note: the getter and setter should call `accessor.directGet` and `accessor.directSet` to access the internal value in the accessor.  
 
 Example code,  
 ```c++
@@ -236,6 +238,8 @@ The difference between ExternalStorage and InternalStorage is, constructors for 
 
 ## Member functions for both InternalStorage and ExternalStorage
 
+Below functions are available in both InternalStorage and ExternalStorage.
+
 ```c++
 constexpr bool isReadOnly() const;
 ```
@@ -260,3 +264,34 @@ Accessor & setWithCallbackData(const ValueType & newValue, CD && callbackData, v
 ```
 
 Set the value with CallbackData.
+
+The `instance` argument in above get/set/setWithCallbackData functions are used to pass the object instance explicity, if the underlying getter/setter is constructed with member data or member function and doesn't bind to an instance. In such case, the `instance` must be passed in explicitly, otherwise, the get/set/setWithCallbackData function will crash as if accessing an object of nullptr.  
+
+```c++
+struct MyClass
+{
+    void setValue(const int newValue) {
+        value = newValue;
+    }
+    int value;
+};
+MyClass instance;
+accessorpp::Accessor<int> accessor(&MyClass::value, &MyClass::setValue);
+
+accessor.set(15, &instance);
+// Bang, crash. The instance is default nullptr
+//accessor = 15;
+
+// output 15
+std::cout << accessor.get(&instance) << std::endl;
+// Bang bang, crash. The instance is default nullptr
+// std::cout << (int)accessor << std::endl;
+
+accessor.set(16, &instance);
+// output 16
+std::cout << accessor.get(&instance) << std::endl;
+```
+
+## Motivations
+
+Back to more than 10 years ago, in my (wqking) another monster library cpgf, I added accessor as a sub library, which serves for and binds to cpgf. Now this is a new independent library, with beautiful C++11 syntax, concise and easy to use.

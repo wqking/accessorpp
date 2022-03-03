@@ -407,12 +407,19 @@ TEST_CASE("This is the play camp for sample code in the document")
 		int value;
 	};
 	MyClass instance;
-	accessorpp::Setter<int> setter(&MyClass::setValue);
-	setter.set(15, &instance);
+	accessorpp::Accessor<int> accessor(&MyClass::value, &MyClass::setValue);
+	
+	accessor.set(15, &instance);
+	// Bang, crash. The instance is default nullptr
+	//accessor = 15;
+	
 	// output 15
-	std::cout << instance.value << std::endl;
-	setter.set(16, &instance);
+	std::cout << accessor.get(&instance) << std::endl;
+	// Bang bang, crash. The instance is default nullptr
+	// std::cout << (int)accessor << std::endl;
+	
+	accessor.set(16, &instance);
 	// output 16
-	std::cout << instance.value << std::endl;
+	std::cout << accessor.get(&instance) << std::endl;
 
 }
