@@ -6,6 +6,7 @@ accessorpp is a C++ library for implementing property and data binding.
 
 - **Powerful**
     - Support arbitrary data type as property or data binding.
+    - Support various kinds of getter and setter, such as data pointer, member data pointer, member function, lambda function, etc.
     - Support event dispatching on changing data.
     - Configurable using policies.
 - **Robust**
@@ -44,7 +45,7 @@ You don't need to link to any source code.
 
 ### Using Accessor
 
-Simple usage
+**Simple usage**
 
 ```c++
 #include "accessorpp/accessor.h"
@@ -57,7 +58,7 @@ accessor = 5;
 std::cout << accessor << std::endl;
 ```
 
-Customized getter/setter
+**Customized getter/setter**
 
 ```c++
 accessorpp::Accessor<int> accessor(
@@ -80,6 +81,38 @@ accessor = 6;
 // output 5
 std::cout << (int)accessor << std::endl;
 ```
+
+**Handle on change events**  
+
+```c++
+struct Policies {
+    using OnChangingCallback = std::function<void (int)>;
+    using OnChangedCallback = std::function<void ()>;
+};
+
+using AccessorType = accessorpp::Accessor<
+    int,
+    Policies
+>;
+AccessorType accessor;
+accessor.onChanging() = [&accessor](const int newValue) {
+    std::cout << "onChanging: new value = " << newValue << " old value = " << accessor << std::endl;
+};
+accessor.onChanged() = [&accessor]() {
+    std::cout << "onChanged: new value = " << accessor << std::endl;
+};
+
+// output
+// onChanging: new value = 5 old value = 0
+// onChanged: new value = 5
+accessor = 5;
+
+// output
+// onChanging: new value = 38 old value = 5
+// onChanged: new value = 38
+accessor = 38;
+```
+
 
 ## Documentations
 
