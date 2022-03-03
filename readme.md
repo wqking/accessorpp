@@ -116,9 +116,10 @@ accessor = 38;
 
 ## Documentations
 
-* [Accessor](doc/accessor.md)
-* [Getter](doc/getter.md)
-* [Setter](doc/setter.md)
+* [Tutorial](doc/tutorial.md)  
+* [Accessor](doc/accessor.md)  
+* [Getter](doc/getter.md)  
+* [Setter](doc/setter.md)  
 
 ## Motivations
 

@@ -399,27 +399,30 @@ TEST_CASE("Accessor, default storage, read only")
 
 TEST_CASE("This is the play camp for sample code in the document")
 {
-	struct MyClass
-	{
-		void setValue(const int newValue) {
-			value = newValue;
-		}
-		int value;
+	struct Policies {
+		using OnChangingCallback = std::function<void (int)>;
+		using OnChangedCallback = std::function<void ()>;
 	};
-	MyClass instance;
-	accessorpp::Accessor<int> accessor(&MyClass::value, &MyClass::setValue);
-	
-	accessor.set(15, &instance);
-	// Bang, crash. The instance is default nullptr
-	//accessor = 15;
-	
-	// output 15
-	std::cout << accessor.get(&instance) << std::endl;
-	// Bang bang, crash. The instance is default nullptr
-	// std::cout << (int)accessor << std::endl;
-	
-	accessor.set(16, &instance);
-	// output 16
-	std::cout << accessor.get(&instance) << std::endl;
 
+	using AccessorType = accessorpp::Accessor<
+		int,
+		Policies
+	>;
+	AccessorType accessor;
+	accessor.onChanging() = [&accessor](const int newValue) {
+		std::cout << "onChanging: new value = " << newValue << " old value = " << accessor << std::endl;
+	};
+	accessor.onChanged() = [&accessor]() {
+		std::cout << "onChanged: new value = " << accessor << std::endl;
+	};
+
+	// output
+	// onChanging: new value = 5 old value = 0
+	// onChanged: new value = 5
+	accessor = 5;
+
+	// output
+	// onChanging: new value = 38 old value = 5
+	// onChanged: new value = 38
+	accessor = 38;
 }
