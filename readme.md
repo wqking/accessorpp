@@ -85,3 +85,7 @@ std::cout << (int)accessor << std::endl;
 * [Accessor](doc/accessor.md)
 * [Getter](doc/getter.md)
 * [Setter](doc/setter.md)
+
+## Motivations
+
+Back to more than 10 years ago, in my (wqking) another monster library cpgf, I added accessor as a sub library, which serves for and binds to cpgf. Now this is a new independent library, with beautiful C++11 syntax, concise and easy to use.
