@@ -21,7 +21,7 @@ class Setter;
 
 ### Default constructor  
 ```c++
-Setter() noexcept;
+Setter();
 ```
 
 Default constructor. 
@@ -29,7 +29,7 @@ Default constructor.
 ### Construct from data address  
 ```c++
 template <typename U>
-explicit Setter(U * address) noexcept;
+explicit Setter(U * address);
 ```
 
 When setting to the setter, the setter sets value to `address`.  
@@ -48,7 +48,7 @@ std::cout << value << std::endl;
 ### Construct from class member address  
 ```c++
 template <typename U, typename C>
-Setter(const U C::* address, const C * instance) noexcept;
+Setter(const U C::* address, const C * instance);
 ```
 
 When setting to the setter, the setter sets the value to member field `instance->*address`.
@@ -71,7 +71,7 @@ std::cout << instance.value << std::endl;
 ### Construct from class member address, pass instance explicitly  
 ```c++
 template <typename U>
-Setter(const U C::* address) noexcept;
+Setter(const U C::* address);
 ```
 
 To set the value, call `Setter::set(value, instance)` with the object instance.    
@@ -95,7 +95,7 @@ std::cout << instance.value << std::endl;
 ### Construct from function  
 ```c++
 template <typename F>
-explicit Setter(F func) noexcept;
+explicit Setter(F func);
 ```
 
 'func' is a callable, such as function pointer, std::function, function object, or lambda. The prototype is `void (Type)`.  
@@ -115,7 +115,7 @@ std::cout << n << std::endl;
 ### Construct from class member function, pass instance explicitly  
 ```c++
 template <typename F>
-explicit Setter(F func) noexcept;
+explicit Setter(F func);
 ```
 
 `func` is a member function which prototype is `void (Type)`.  
@@ -141,14 +141,14 @@ std::cout << instance.value << std::endl;
 
 ### Copy constructor  
 ```c++
-Setter(const Setter & other) noexcept;
+Setter(const Setter & other);
 ```
 
 Copy constructor.
 
 ### Move constructor  
 ```c++
-Setter(Setter && other) noexcept;
+Setter(Setter && other);
 ```
 
 Move constructor.

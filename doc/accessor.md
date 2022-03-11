@@ -108,7 +108,7 @@ The tutorial "tutorial_view_model_binding.cpp" in the tests source code demonstr
 ### Default constructor  
 
 ```c++
-Accessor(const Type & newValue = Type()) noexcept;
+Accessor(const Type & newValue = Type());
 ```
 
 Default constructor.  
@@ -117,7 +117,7 @@ Default constructor.
 ### Construct from getter and setter
 ```c++
 template <typename G, typename S>
-Accessor(G && getter, S && setter, const ValueType & newValue = ValueType()) noexcept;
+Accessor(G && getter, S && setter, const ValueType & newValue = ValueType());
 ```
 
 The argument `getter` and `setter` are used to construct underlying `accessorpp::Getter` and `accessorpp::Setter`.  
@@ -155,7 +155,7 @@ Accessor(
         G && getter, IG && getterInstance,
         S && setter, IS && setterInstance,
         const ValueType & newValue = ValueType()
-    ) noexcept;
+    );
 ```
 
 `newValue` is the initial value.  
@@ -190,14 +190,14 @@ accessorpp::Accessor<int> accessor(
 
 ### Copy constructor  
 ```c++
-Accessor(const Accessor & other) noexcept;
+Accessor(const Accessor & other);
 ```
 
 Copy constructor.
 
 ### Move constructor  
 ```c++
-Accessor(Accessor && other) noexcept;
+Accessor(Accessor && other);
 ```
 
 Move constructor.
@@ -224,14 +224,14 @@ Set the internal value directly. This is used to implement customized setter.
 ```c++
 Accessor() noexcept;
 template <typename G, typename S>
-Accessor(G && getter, S && setter) noexcept;
+Accessor(G && getter, S && setter);
 template <typename G, typename IG, typename S, typename IS>
 Accessor(
         G && getter, IG && getterInstance,
         S && setter, IS && setterInstance
-    ) noexcept;
-Accessor(const Accessor & other) noexcept;
-Accessor(Accessor && other) noexcept;
+    );
+Accessor(const Accessor & other);
+Accessor(Accessor && other);
 ```
 
 The difference between ExternalStorage and InternalStorage is, constructors for ExternalStorage don't have the argument for initial value(`newValue`).  ExternalStorage doesn't have functions `directGet` and `directSet`.  

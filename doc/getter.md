@@ -21,7 +21,7 @@ class Getter;
 
 ### Default constructor  
 ```c++
-Getter() noexcept;
+Getter();
 ```
 
 Default constructor. Note: if the `Type` is a reference, the default constructor won't compile.
@@ -29,7 +29,7 @@ Default constructor. Note: if the `Type` is a reference, the default constructor
 ### Construct from data address  
 ```c++
 template <typename U>
-explicit Getter(const U * address) noexcept;
+explicit Getter(const U * address);
 ```
 
 When reading from the getter, the getter gets value from `address` and cast the value to `Type`.  
@@ -47,7 +47,7 @@ std::cout << (int)getter << std::endl;
 ### Construct from class member address  
 ```c++
 template <typename U, typename C>
-Getter(const U C::* address, const C * instance) noexcept;
+Getter(const U C::* address, const C * instance);
 ```
 
 When reading from the getter, the getter gets value from member field `instance->*address` and cast the value to `Type`.
@@ -69,7 +69,7 @@ std::cout << (int)getter << std::endl;
 ### Construct from class member address, pass instance explicitly  
 ```c++
 template <typename U>
-Getter(const U C::* address) noexcept;
+Getter(const U C::* address);
 ```
 
 To read the value, call `Getter::get(instance)` with the object instance.    
@@ -90,7 +90,7 @@ std::cout << getter.get(&instance) << std::endl;
 
 ### Construct from constant data  
 ```c++
-Getter(const Type & value) noexcept;
+Getter(const Type & value);
 ```
 
 When reading from the getter, the getter always returns 'value', that's to say, the getter returns constant 'value'.
@@ -109,7 +109,7 @@ std::cout << (int)getter << std::endl;
 ### Construct from function  
 ```c++
 template <typename F>
-explicit Getter(F func) noexcept;
+explicit Getter(F func);
 ```
 
 'func' is a callable, such as function pointer, std::function, function object, or lambda. The prototype is `Type ()`.  
@@ -127,7 +127,7 @@ std::cout << (int)getter << std::endl;
 ### Construct from class member function  
 ```c++
 template <typename F, typename C>
-explicit Getter(F func, C * instance) noexcept;
+explicit Getter(F func, C * instance);
 ```
 
 `func` is a member function which prototype is `Type ()`, `instance` is the object pointer.  
@@ -153,7 +153,7 @@ std::cout << (int)getter << std::endl;
 ### Construct from class member function, pass instance explicitly  
 ```c++
 template <typename F>
-explicit Getter(F func) noexcept;
+explicit Getter(F func);
 ```
 
 `func` is a member function which prototype is `Type ()`.  
@@ -178,14 +178,14 @@ std::cout << getter.get(&instance) << std::endl;
 
 ### Copy constructor  
 ```c++
-Getter(const Getter & other) noexcept;
+Getter(const Getter & other);
 ```
 
 Copy constructor.
 
 ### Move constructor  
 ```c++
-Getter(Getter && other) noexcept;
+Getter(Getter && other);
 ```
 
 Move constructor.
