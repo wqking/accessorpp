@@ -317,32 +317,32 @@ Accessor<T, Policies> createAccessor(G && getter, S && setter, Policies = Polici
 
 // #2
 template <
-	typename T,
-	typename G, typename IG, typename S, typename IS,
-	typename Policies = DefaultPolicies
+    typename T,
+    typename G, typename IG, typename S, typename IS,
+    typename Policies = DefaultPolicies
 >
 Accessor<T, Policies> createAccessor(
-		G && getter, IG && getterInstance,
-		S && setter, IS && setterInstance,
-		Policies = Policies()
-	);
+        G && getter, IG && getterInstance,
+        S && setter, IS && setterInstance,
+        Policies = Policies()
+    );
 
 // #3
 template <typename G, typename S, typename Policies = DefaultPolicies>
 auto createAccessor(G && getter, S && setter, Policies = Policies())
-	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+    -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 
 // #4
 template <
-	typename G, typename IG, typename S, typename IS,
-	typename Policies = DefaultPolicies
+    typename G, typename IG, typename S, typename IS,
+    typename Policies = DefaultPolicies
 >
 auto createAccessor(
-		G && getter, IG && getterInstance,
-		S && setter, IS && setterInstance,
-		Policies = Policies()
-	)
-	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+        G && getter, IG && getterInstance,
+        S && setter, IS && setterInstance,
+        Policies = Policies()
+    )
+    -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 ```
 
 Create accessor object using given arguments.  
@@ -363,12 +363,12 @@ Accessor<T> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies =
 // #3
 template <typename T, typename G, typename Policies = DefaultPolicies>
 auto createReadOnlyAccessor(G && getter, Policies = Policies())
-	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+    -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 
 // #4
 template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
 auto createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies())
-	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+    -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 ```
 
 Create read-only accessor object using given arguments.  
