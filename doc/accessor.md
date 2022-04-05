@@ -354,19 +354,19 @@ Create accessor object using given arguments.
 ```c++
 // #1
 template <typename T, typename G, typename Policies = DefaultPolicies>
-Accessor<T> createReadOnlyAccessor(G && getter, Policies = Policies());
+Accessor<T, Policies> createReadOnlyAccessor(G && getter, Policies = Policies());
 
 // #2
 template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
-Accessor<T> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies());
+Accessor<T, Policies> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies());
 
 // #3
-template <typename T, typename G, typename Policies = DefaultPolicies>
+template <typename G, typename Policies = DefaultPolicies>
 auto createReadOnlyAccessor(G && getter, Policies = Policies())
     -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 
 // #4
-template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
+template <typename G, typename IG, typename Policies = DefaultPolicies>
 auto createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies())
     -> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
 ```

@@ -227,20 +227,20 @@ auto createAccessor(
 }
 
 template <typename T, typename G, typename Policies = DefaultPolicies>
-Accessor<T> createReadOnlyAccessor(G && getter, Policies = Policies())
+Accessor<T, Policies> createReadOnlyAccessor(G && getter, Policies = Policies())
 {
 	using A = Accessor<T, Policies>;
 	return A(getter, noSetter);
 }
 
-template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
-Accessor<T> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies())
+template <typename T, typename G, typename IG, typename Policies>
+Accessor<T, Policies> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies)
 {
 	using A = Accessor<T, Policies>;
 	return A(A::GetterType(std::forward<G>(getter), std::forward<IG>(getterInstance)), noSetter);
 }
 
-template <typename T, typename G, typename Policies = DefaultPolicies>
+template <typename G, typename Policies = DefaultPolicies>
 auto createReadOnlyAccessor(G && getter, Policies = Policies())
 	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>
 {
@@ -248,8 +248,8 @@ auto createReadOnlyAccessor(G && getter, Policies = Policies())
 	return A(std::forward<G>(getter), noSetter);
 }
 
-template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
-auto createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies())
+template <typename G, typename IG, typename Policies>
+auto createReadOnlyAccessor(G && getter, IG && getterInstance, Policies)
 	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>
 {
 	using A = Accessor<typename private_::DetectValueType<G>::Type, Policies>;
