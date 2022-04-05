@@ -1,16 +1,6 @@
 set(TARGET_TEST unittest)
 
-set(SRC_TEST
-	testmain.cpp
-	test_getter.cpp
-	test_setter.cpp
-	test_accessor_basic.cpp
-	test_accessor_default_no_getter_setter.cpp
-	test_accessor_operator_binary.cpp
-	test_accessor_operator_binary_assignment.cpp
-	test_accessor_operator_logic.cpp
-	test_accessor_operator_unary.cpp
-)
+file(GLOB_RECURSE SRC_TEST "./*.cpp")
 
 add_executable(
 	${TARGET_TEST}

@@ -204,29 +204,81 @@ struct NoStoragePolicies
 TEST_CASE("Accessor, int, ExternalStorage, variable")
 {
 	int value{};
-	accessorpp::Accessor<int, NoStoragePolicies> accessor(&value, &value);
-	REQUIRE(! accessorpp::Accessor<int, NoStoragePolicies>::internalStorage);
+	SECTION("Use ctor") {
+		accessorpp::Accessor<int, NoStoragePolicies> accessor(&value, &value);
+		REQUIRE(! accessorpp::Accessor<int, NoStoragePolicies>::internalStorage);
 
-	REQUIRE(accessor.get() == 0);
+		REQUIRE(accessor.get() == 0);
 
-	accessor = 3;
-	REQUIRE(accessor.get() == 3);
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
 
-	accessor = 8;
-	REQUIRE(accessor.get() == 8);
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
+
+	SECTION("Use createAccessor<int>") {
+		auto accessor(accessorpp::createAccessor<int>(&value, &value, NoStoragePolicies()));
+		REQUIRE(! accessorpp::Accessor<int, NoStoragePolicies>::internalStorage);
+
+		REQUIRE(accessor.get() == 0);
+
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
+
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
+
+	SECTION("Use createAccessor") {
+		auto accessor(accessorpp::createAccessor(&value, &value, NoStoragePolicies()));
+		REQUIRE(! accessorpp::Accessor<int, NoStoragePolicies>::internalStorage);
+
+		REQUIRE(accessor.get() == 0);
+
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
+
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
 }
 
 TEST_CASE("Accessor, int, ExternalStorage, member, embed instance")
 {
 	MyValue myValue;
-	accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue, &MyValue::value, &myValue);
-	REQUIRE(accessor.get() == 0);
+	SECTION("Use ctor") {
+		accessorpp::Accessor<int, NoStoragePolicies> accessor(&MyValue::value, &myValue, &MyValue::value, &myValue);
+		REQUIRE(accessor.get() == 0);
 
-	accessor = 3;
-	REQUIRE(accessor.get() == 3);
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
 
-	accessor = 8;
-	REQUIRE(accessor.get() == 8);
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
+
+	SECTION("Use createAccessor<int>") {
+		auto accessor(accessorpp::createAccessor<int>(&MyValue::value, &myValue, &MyValue::value, &myValue, NoStoragePolicies()));
+		REQUIRE(accessor.get() == 0);
+
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
+
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
+
+	SECTION("Use createAccessor") {
+		auto accessor(accessorpp::createAccessor(&MyValue::value, &myValue, &MyValue::value, &myValue, NoStoragePolicies()));
+		REQUIRE(accessor.get() == 0);
+
+		accessor = 3;
+		REQUIRE(accessor.get() == 3);
+
+		accessor = 8;
+		REQUIRE(accessor.get() == 8);
+	}
 }
 
 TEST_CASE("Accessor, int, ExternalStorage, member, pass instance")
@@ -268,106 +320,19 @@ TEST_CASE("Accessor, int, ExternalStorage, member getValue() setValue(), pass in
 	REQUIRE(accessor.get(&myValue) == 8);
 }
 
-TEST_CASE("Accessor, callback")
-{
-	struct Policies {
-		using OnChangingCallback = std::function<void (int)>;
-		using OnChangedCallback = std::function<void ()>;
-	};
-
-	using AccessorType = accessorpp::Accessor<
-		const int &,
-		Policies
-	>;
-	struct ValuePair
-	{
-		int newValue;
-		int oldValue;
-	};
-	ValuePair changingValue {};
-	ValuePair changedValue {};
-	AccessorType accessor;
-	accessor.onChanging() = [&changingValue, &accessor](const int newValue) {
-		changingValue.newValue = newValue;
-		changingValue.oldValue = accessor;
-	};
-	accessor.onChanged() = [&changedValue, &accessor]() {
-		changedValue.newValue = accessor;
-	};
-	REQUIRE(changingValue.newValue == 0);
-	REQUIRE(changingValue.oldValue == 0);
-	REQUIRE(changedValue.newValue == 0);
-	REQUIRE(changedValue.oldValue == 0);
-
-	accessor = 3;
-	REQUIRE(changingValue.newValue == 3);
-	REQUIRE(changingValue.oldValue == 0);
-	REQUIRE(changedValue.newValue == 3);
-	REQUIRE(changedValue.oldValue == 0);
-
-	accessor = 8;
-	REQUIRE(changingValue.newValue == 8);
-	REQUIRE(changingValue.oldValue == 3);
-	REQUIRE(changedValue.newValue == 8);
-	REQUIRE(changedValue.oldValue == 0);
-}
-
-TEST_CASE("Accessor, callback, CallbackData")
-{
-	struct Policies {
-		using OnChangingCallback = std::function<void (int, std::string)>;
-		using OnChangedCallback = std::function<void ()>;
-		using CallbackData = std::string;
-	};
-
-	using AccessorType = accessorpp::Accessor<
-		const int &,
-		Policies
-	>;
-
-	struct ValuePair
-	{
-		int newValue;
-		int oldValue;
-		std::string context;
-	};
-	ValuePair changingValue {};
-	ValuePair changedValue {};
-	AccessorType accessor;
-	accessor.onChanging() = [&changingValue, &accessor](const int newValue, const std::string & context) {
-		changingValue.newValue = newValue;
-		changingValue.oldValue = accessor;
-		changingValue.context = context;
-	};
-	accessor.onChanged() = [&changedValue, &accessor]() {
-		changedValue.newValue = accessor;
-	};
-	REQUIRE(changingValue.newValue == 0);
-	REQUIRE(changingValue.oldValue == 0);
-	REQUIRE(changedValue.newValue == 0);
-	REQUIRE(changedValue.oldValue == 0);
-
-	accessor = 3;
-	REQUIRE(changingValue.newValue == 3);
-	REQUIRE(changingValue.oldValue == 0);
-	REQUIRE(changingValue.context == "");
-	REQUIRE(changedValue.newValue == 3);
-	REQUIRE(changedValue.oldValue == 0);
-
-	accessor.setWithCallbackData(8, "Hello");
-	REQUIRE(changingValue.newValue == 8);
-	REQUIRE(changingValue.oldValue == 3);
-	REQUIRE(changingValue.context == "Hello");
-	REQUIRE(changedValue.newValue == 8);
-	REQUIRE(changedValue.oldValue == 0);
-}
-
 TEST_CASE("Accessor, default storage, read only")
 {
 	using Accessor = accessorpp::Accessor<int>;
 
 	{
 		Accessor accessor(accessorpp::defaultGetter, accessorpp::noSetter);
+		REQUIRE(accessor == 0);
+		REQUIRE(accessor.isReadOnly());
+		CHECK_THROWS(accessor = 5);
+	}
+
+	{
+		auto accessor(accessorpp::createReadOnlyAccessor<int>(accessorpp::defaultGetter));
 		REQUIRE(accessor == 0);
 		REQUIRE(accessor.isReadOnly());
 		CHECK_THROWS(accessor = 5);
