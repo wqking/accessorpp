@@ -19,14 +19,14 @@ class Getter;
 
 ## Constructors
 
-### Default constructor  
+#### Default constructor  
 ```c++
 Getter();
 ```
 
 Default constructor. Note: if the `Type` is a reference, the default constructor won't compile.
 
-### Construct from data address  
+#### Construct from data address  
 ```c++
 template <typename U>
 explicit Getter(const U * address);
@@ -44,7 +44,7 @@ value = 5;
 std::cout << (int)getter << std::endl;
 ```
 
-### Construct from class member address  
+#### Construct from class member address  
 ```c++
 template <typename U, typename C>
 Getter(const U C::* address, const C * instance);
@@ -66,7 +66,7 @@ instance.value = 9;
 std::cout << (int)getter << std::endl;
 ```
 
-### Construct from class member address, pass instance explicitly  
+#### Construct from class member address, pass instance explicitly  
 ```c++
 template <typename U>
 Getter(const U C::* address);
@@ -88,7 +88,7 @@ instance.value = 9;
 std::cout << getter.get(&instance) << std::endl;
 ```
 
-### Construct from constant data  
+#### Construct from constant data  
 ```c++
 Getter(const Type & value);
 ```
@@ -106,7 +106,7 @@ n = 8;
 std::cout << (int)getter << std::endl;
 ```
 
-### Construct from function  
+#### Construct from function  
 ```c++
 template <typename F>
 explicit Getter(F func);
@@ -124,7 +124,7 @@ std::cout << (int)getter << std::endl;
 std::cout << (int)getter << std::endl;
 ```
 
-### Construct from class member function  
+#### Construct from class member function  
 ```c++
 template <typename F, typename C>
 explicit Getter(F func, C * instance);
@@ -150,7 +150,7 @@ instance.value = 19;
 std::cout << (int)getter << std::endl;
 ```
 
-### Construct from class member function, pass instance explicitly  
+#### Construct from class member function, pass instance explicitly  
 ```c++
 template <typename F>
 explicit Getter(F func);
@@ -176,14 +176,14 @@ instance.value = 19;
 std::cout << getter.get(&instance) << std::endl;
 ```
 
-### Copy constructor  
+#### Copy constructor  
 ```c++
 Getter(const Getter & other);
 ```
 
 Copy constructor.
 
-### Move constructor  
+#### Move constructor  
 ```c++
 Getter(Getter && other);
 ```
@@ -192,6 +192,8 @@ Move constructor.
 
 ## Member functions
 
+#### get, operator Type
+
 ```c++
 Type get(const void * instance = nullptr) const;
 operator Type() const;
@@ -199,6 +201,8 @@ operator Type() const;
 
 Both returns the underlying value.  
 If the getter is a class member and instance is not passed in constructor, the `instance` in the `get` function must be a valid object instance. Otherwise, `instance` can be nullptr.
+
+#### Output streaming
 
 ```c++
 template <typename Type>

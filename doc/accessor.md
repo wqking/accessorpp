@@ -105,7 +105,7 @@ The tutorial "tutorial_view_model_binding.cpp" in the tests source code demonstr
 
 ## Constructors for InternalStorage
 
-### Default constructor  
+#### Default constructor  
 
 ```c++
 Accessor(const Type & newValue = Type());
@@ -114,7 +114,7 @@ Accessor(const Type & newValue = Type());
 Default constructor.  
 `newValue` is the initial value.  
 
-### Construct from getter and setter
+#### Construct from getter and setter
 ```c++
 template <typename G, typename S>
 Accessor(G && getter, S && setter, const ValueType & newValue = ValueType());
@@ -148,7 +148,7 @@ const int value = accessor;
 accessor = value + 1;
 ```
 
-### Construct from class members  
+#### Construct from class members  
 ```c++
 template <typename G, typename IG, typename S, typename IS>
 Accessor(
@@ -188,14 +188,14 @@ accessorpp::Accessor<int> accessor(
 );
 ```
 
-### Copy constructor  
+#### Copy constructor  
 ```c++
 Accessor(const Accessor & other);
 ```
 
 Copy constructor.
 
-### Move constructor  
+#### Move constructor  
 ```c++
 Accessor(Accessor && other);
 ```
@@ -204,6 +204,7 @@ Move constructor.
 
 ## Member functions for InternalStorage
 
+#### directGet, directGet
 ```c++
 const Type & directGet() const;
 Type & directGet();
@@ -240,12 +241,15 @@ The difference between ExternalStorage and InternalStorage is, constructors for 
 
 Below functions are available in both InternalStorage and ExternalStorage.
 
+#### isReadOnly
+
 ```c++
 constexpr bool isReadOnly() const;
 ```
 
 Return true if the accessor is read-only. Setting to a read-only accessor will throw `std::logic_error`.  
 
+#### get, operator ValueType
 ```c++
 ValueType get(const void * instance = nullptr) const;
 operator ValueType() const;
@@ -253,27 +257,23 @@ operator ValueType() const;
 
 Get the value. The function is same as `Getter::get`.  
 
+#### set
 ```c++
 Accessor & set(const ValueType & newValue, void * instance = nullptr);
 ```
 
 Set the value. The function is same as `Setter::set`.  
 
+#### setWithCallbackData
 ```c++
 Accessor & setWithCallbackData(const ValueType & newValue, CD && callbackData, void * instance = nullptr);
 ```
 
 Set the value with CallbackData.
 
-```c++
-std::ostream & operator << (std::ostream & stream, const Accessor & accessor);
-std::istream & operator >> (std::istream & stream, Accessor & accessor);
-```
-
 Input/output stream operator are overload. Accessor uses the underlying value with the stream.
 
-
-The `instance` argument in above get/set/setWithCallbackData functions are used to pass the object instance explicity, if the underlying getter/setter is constructed with member data or member function and doesn't bind to an instance. In such case, the `instance` must be passed in explicitly, otherwise, the get/set/setWithCallbackData function will crash as if accessing an object of nullptr.  
+The `instance` argument in above get/set/setWithCallbackData functions are used to pass the object instance explicitly, if the underlying getter/setter is constructed with member data or member function and doesn't bind to an instance. In such case, the `instance` must be passed in explicitly, otherwise, the get/set/setWithCallbackData function will crash as if accessing an object of nullptr.  
 
 ```c++
 struct MyClass
@@ -300,3 +300,77 @@ accessor.set(16, &instance);
 std::cout << accessor.get(&instance) << std::endl;
 ```
 
+#### I/O streaming
+```c++
+std::ostream & operator << (std::ostream & stream, const Accessor & accessor);
+std::istream & operator >> (std::istream & stream, Accessor & accessor);
+```
+
+## Non-member free functions
+
+#### createAccessor
+
+```c++
+// #1
+template <typename T, typename G, typename S, typename Policies>
+Accessor<T, Policies> createAccessor(G && getter, S && setter, Policies = Policies());
+
+// #2
+template <
+	typename T,
+	typename G, typename IG, typename S, typename IS,
+	typename Policies = DefaultPolicies
+>
+Accessor<T, Policies> createAccessor(
+		G && getter, IG && getterInstance,
+		S && setter, IS && setterInstance,
+		Policies = Policies()
+	);
+
+// #3
+template <typename G, typename S, typename Policies = DefaultPolicies>
+auto createAccessor(G && getter, S && setter, Policies = Policies())
+	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+
+// #4
+template <
+	typename G, typename IG, typename S, typename IS,
+	typename Policies = DefaultPolicies
+>
+auto createAccessor(
+		G && getter, IG && getterInstance,
+		S && setter, IS && setterInstance,
+		Policies = Policies()
+	)
+	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+```
+
+Create accessor object using given arguments.  
+#1 and #2 create the accessor using the explicitly passed-in type `T`.  
+#3 and #4 deducts the accessor type automatically.
+
+#### createReadOnlyAccessor
+
+```c++
+// #1
+template <typename T, typename G, typename Policies = DefaultPolicies>
+Accessor<T> createReadOnlyAccessor(G && getter, Policies = Policies());
+
+// #2
+template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
+Accessor<T> createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies());
+
+// #3
+template <typename T, typename G, typename Policies = DefaultPolicies>
+auto createReadOnlyAccessor(G && getter, Policies = Policies())
+	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+
+// #4
+template <typename T, typename G, typename IG, typename Policies = DefaultPolicies>
+auto createReadOnlyAccessor(G && getter, IG && getterInstance, Policies = Policies())
+	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>;
+```
+
+Create read-only accessor object using given arguments.  
+#1 and #2 create the accessor using the explicitly passed-in type `T`.  
+#3 and #4 deducts the accessor type automatically.

@@ -19,14 +19,14 @@ class Setter;
 
 ## Constructors
 
-### Default constructor  
+#### Default constructor  
 ```c++
 Setter();
 ```
 
 Default constructor. 
 
-### Construct from data address  
+#### Construct from data address  
 ```c++
 template <typename U>
 explicit Setter(U * address);
@@ -45,7 +45,7 @@ setter = 8;
 std::cout << value << std::endl;
 ```
 
-### Construct from class member address  
+#### Construct from class member address  
 ```c++
 template <typename U, typename C>
 Setter(const U C::* address, const C * instance);
@@ -68,7 +68,7 @@ setter = 19;
 std::cout << instance.value << std::endl;
 ```
 
-### Construct from class member address, pass instance explicitly  
+#### Construct from class member address, pass instance explicitly  
 ```c++
 template <typename U>
 Setter(const U C::* address);
@@ -92,7 +92,7 @@ setter.set(19, &instance);
 std::cout << instance.value << std::endl;
 ```
 
-### Construct from function  
+#### Construct from function  
 ```c++
 template <typename F>
 explicit Setter(F func);
@@ -112,7 +112,7 @@ setter = 10;
 std::cout << n << std::endl;
 ```
 
-### Construct from class member function, pass instance explicitly  
+#### Construct from class member function, pass instance explicitly  
 ```c++
 template <typename F>
 explicit Setter(F func);
@@ -139,14 +139,14 @@ setter.set(16, &instance);
 std::cout << instance.value << std::endl;
 ```
 
-### Copy constructor  
+#### Copy constructor  
 ```c++
 Setter(const Setter & other);
 ```
 
 Copy constructor.
 
-### Move constructor  
+#### Move constructor  
 ```c++
 Setter(Setter && other);
 ```
@@ -155,6 +155,8 @@ Move constructor.
 
 ## Member functions
 
+#### assignment, set
+
 ```c++
 Setter & operator = (const ValueType & value, void * instance = nullptr);
 void set(const ValueType & value);
@@ -162,6 +164,8 @@ void set(const ValueType & value);
 
 Both sets the underlying value.  
 If the setter is a class member and instance is not passed in constructor, the `instance` in the `set` function must be a valid object instance. Otherwise, `instance` can be nullptr.
+
+#### Input streaming
 
 ```c++
 template <typename Type>

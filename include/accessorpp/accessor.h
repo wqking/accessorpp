@@ -197,15 +197,8 @@ Accessor<T, Policies> createAccessor(
 	);
 }
 
-template <
-	typename G, typename S,
-	typename Policies = DefaultPolicies
->
-auto createAccessor(
-		G && getter,
-		S && setter,
-		Policies = Policies()
-	)
+template <typename G, typename S, typename Policies = DefaultPolicies>
+auto createAccessor(G && getter, S && setter, Policies = Policies())
 	-> Accessor<typename private_::DetectValueType<G>::Type, Policies>
 {
 	using A = Accessor<typename private_::DetectValueType<G>::Type, Policies>;
